@@ -10,6 +10,7 @@ import com.codearena.repository.UserRepository;
 import org.springframework.security.crypto.password.
 import com.codearena.dto.LoginRequest;
 import com.codearena.exception.UserNotFoundException;
+import com.codearena.security.JwtService;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,16 +18,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+  private final UserRepository userRepository;
+  private final PasswordEncoder passwordEncoder;
+  private final JwtService jwtService;
 
-    public UserService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder) {
+   public UserService(
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder,
+        JwtService jwtService) {
 
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    this.userRepository = userRepository;
+    this.passwordEncoder = passwordEncoder;
+    this.jwtService = jwtService;
+}
 
     public User createUser(UserRequest request) {
 
@@ -71,10 +75,13 @@ public class UserService {
         );
     }
 
-    return new LoginResponse(
-            user.getId(),
-            user.getName(),
-            user.getEmail()
-    );
+    String token = jwtService.generateToken(user);
+
+return new LoginResponse(
+        user.getId(),
+        user.getName(),
+        user.getEmail(),
+        token
+);
 }
 }
