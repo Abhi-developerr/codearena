@@ -1,11 +1,11 @@
 package com.codearena.exception;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -19,6 +19,18 @@ public ErrorResponse handleEmailAlreadyExists(
             null
     );
 }
+
+@ExceptionHandler(UserNotFoundException.class)
+public ErrorResponse handleUserNotFound(
+        UserNotFoundException exception) {
+
+    return new ErrorResponse(
+            401,
+            exception.getMessage(),
+            null
+    );
+}
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ErrorResponse handleValidationException(
             MethodArgumentNotValidException exception) {
