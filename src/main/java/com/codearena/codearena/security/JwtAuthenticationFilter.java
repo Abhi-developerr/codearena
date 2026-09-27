@@ -42,24 +42,31 @@ protected void doFilterInternal(
     }
 
     String token = authHeader.substring(7);
+try {
 
     String email = jwtService.extractEmail(token);
 
     User user = userRepository.findByEmail(email)
             .orElse(null);
 
-     if (user != null) {
+    if (user != null && jwtService.isTokenValid(token, user)) {
 
-    UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(
-                    user,
-                    null,
-                    null
-            );
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        user,
+                        null,
+                        null
+                );
+
+        SecurityContextHolder
+                .getContext()
+                .setAuthentication(authentication);
+    }
+
+} catch (Exception exception) {
 
     SecurityContextHolder
-            .getContext()
-            .setAuthentication(authentication);
+            .clearContext();
 }
 
     filterChain.doFilter(request, response);

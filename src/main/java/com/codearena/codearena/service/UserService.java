@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.
 import com.codearena.dto.LoginRequest;
 import com.codearena.exception.UserNotFoundException;
 import com.codearena.security.JwtService;
+import io.jsonwebtoken.JwtException;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -83,5 +84,18 @@ return new LoginResponse(
         user.getEmail(),
         token
 );
+}
+public boolean isTokenValid(String token, User user) {
+
+    try {
+
+        String email = extractEmail(token);
+
+        return email.equals(user.getEmail());
+
+    } catch (JwtException | IllegalArgumentException exception) {
+
+        return false;
+    }
 }
 }
