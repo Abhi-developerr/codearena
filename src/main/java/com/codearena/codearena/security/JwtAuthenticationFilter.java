@@ -12,8 +12,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.codearena.entity.User;
 import com.codearena.repository.UserRepository;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.codearena.security.CustomUserDetails;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Component
@@ -52,22 +54,24 @@ try {
     String role = jwtService.extractRole(token);
 
     User user = userRepository.findByEmail(email)
-            .orElse(null);
+        .orElse(null);
 
-    if (user != null && jwtService.isTokenValid(token, user)) {
+if (user != null && jwtService.isTokenValid(token, user)) {
 
-        UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        user,
-                        null,
-                        List.of(authority)
-                );
+    UserDetails userDetails =
+            new CustomUserDetails(user);
 
-        SecurityContextHolder
-                .getContext()
-                .setAuthentication(authentication);
-    }
+    UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
 
+    SecurityContextHolder
+            .getContext()
+            .setAuthentication(authentication);
+}
 } catch (Exception exception) {
 
     SecurityContextHolder

@@ -1,6 +1,7 @@
 package com.codearena.controller;
 
 import com.codearena.codearena.dto.LoginRequest;
+import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.dto.UserRequest;
 import com.codearena.entity.User;
 import com.codearena.service.UserService;
@@ -10,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.codearena.dto.LoginRequest;
 import com.codearena.dto.LoginResponse;
+import com.codearena.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 
 @RestController
@@ -41,7 +43,10 @@ public LoginResponse login(@Valid @RequestBody LoginRequest request) {
 @GetMapping("/profile")
 public String getProfile(Authentication authentication) {
 
-    User user = (User) authentication.getPrincipal();
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    User user = userDetails.getUser();
 
     return "Logged in as: " + user.getEmail();
 }

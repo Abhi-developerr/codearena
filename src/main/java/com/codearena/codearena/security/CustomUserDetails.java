@@ -15,7 +15,9 @@ public class CustomUserDetails implements UserDetails {
     public CustomUserDetails(User user) {
         this.user = user;
     }
-
+public User getUser() {
+    return user;
+}
     @Override
     public String getUsername() {
         return user.getEmail();
@@ -25,6 +27,26 @@ public class CustomUserDetails implements UserDetails {
     public String getPassword() {
         return user.getPassword();
     }
+
+    @Override
+public boolean isAccountNonExpired() {
+    return true;
+}
+
+@Override
+public boolean isAccountNonLocked() {
+    return true;
+}
+
+@Override
+public boolean isCredentialsNonExpired() {
+    return true;
+}
+
+@Override
+public boolean isEnabled() {
+    return true;
+}
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
