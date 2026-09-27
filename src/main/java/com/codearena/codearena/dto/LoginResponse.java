@@ -1,4 +1,4 @@
-package com.codearena.dto;
+package com.codearena.codearena.dto;
 
 public class LoginResponse {
 
@@ -32,4 +32,5 @@ public class LoginResponse {
 
     public String getToken() {
     return token;
+}
 }

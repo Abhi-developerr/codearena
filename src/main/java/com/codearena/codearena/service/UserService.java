@@ -1,18 +1,16 @@
-package com.codearena.service;
+package com.codearena.codearena.service;
 
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.exception.UserNotFoundException;
 import com.codearena.codearena.security.CustomUserDetails;
-import com.codearena.dto.UserRequest;
-import com.codearena.entity.User;
-import com.codearena.exception.EmailAlreadyExistsException;
-import com.codearena.repository.UserRepository;
+import com.codearena.codearena.dto.UserRequest;
+import com.codearena.codearena.entity.User;
+import com.codearena.codearena.exception.EmailAlreadyExistsException;
+import com.codearena.codearena.repository.UserRepository;
 import org.springframework.security.core.Authentication;
-import com.codearena.dto.LoginRequest;
-import com.codearena.security.JwtService;
+import com.codearena.codearena.security.JwtService;
 import io.jsonwebtoken.JwtException;
-import com.codearena.security.CustomUserDetails;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -90,7 +88,7 @@ public boolean isTokenValid(String token, User user) {
 
     try {
 
-        String email = extractEmail(token);
+        String email = jwtService.extractEmail(token);
 
         return email.equals(user.getEmail());
 

@@ -1,17 +1,16 @@
-package com.codearena.controller;
+package com.codearena.codearena.controller;
 
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.security.CustomUserDetails;
-import com.codearena.dto.UserRequest;
-import com.codearena.entity.User;
-import com.codearena.service.UserService;
+import com.codearena.codearena.dto.UserRequest;
+import com.codearena.codearena.entity.User;
+import com.codearena.codearena.service.UserService;
 import jakarta.validation.Valid;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import com.codearena.dto.LoginRequest;
-import com.codearena.dto.LoginResponse;
-import com.codearena.security.CustomUserDetails;
+import com.codearena.codearena.dto.LoginResponse;
+import com.codearena.codearena.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 
 @RestController

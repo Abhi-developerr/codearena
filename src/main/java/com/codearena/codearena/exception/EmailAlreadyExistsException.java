@@ -1,4 +1,4 @@
-package com.codearena.exception;
+package com.codearena.codearena.exception;
 
 public class EmailAlreadyExistsException extends RuntimeException {
 

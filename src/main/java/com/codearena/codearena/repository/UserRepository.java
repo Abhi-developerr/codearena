@@ -1,6 +1,6 @@
-package com.codearena.repository;
+package com.codearena.codearena.repository;
 
-import com.codearena.entity.User;
+import com.codearena.codearena.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

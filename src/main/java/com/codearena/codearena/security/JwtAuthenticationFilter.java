@@ -1,4 +1,4 @@
-package com.codearena.security;
+package com.codearena.codearena.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -75,9 +75,7 @@ public class JwtAuthenticationFilter
 
         } catch (Exception exception) {
 
-            SecurityContextHolder
-                    .getContext()
-                    .clearContext();
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);

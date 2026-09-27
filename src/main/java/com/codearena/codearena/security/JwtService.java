@@ -1,6 +1,6 @@
-package com.codearena.security;
+package com.codearena.codearena.security;
 
-import com.codearena.entity.User;
+import com.codearena.codearena.entity.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;

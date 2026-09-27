@@ -1,7 +1,7 @@
-package com.codearena.security;
+package com.codearena.codearena.security;
 
-import com.codearena.entity.User;
-import com.codearena.repository.UserRepository;
+import com.codearena.codearena.entity.User;
+import com.codearena.codearena.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

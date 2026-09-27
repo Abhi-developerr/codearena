@@ -1,6 +1,6 @@
-package com.codearena.security;
+package com.codearena.codearena.security;
 
-import com.codearena.entity.User;
+import com.codearena.codearena.entity.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;

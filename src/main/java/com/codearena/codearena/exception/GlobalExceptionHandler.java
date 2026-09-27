@@ -1,4 +1,4 @@
-package com.codearena.exception;
+package com.codearena.codearena.exception;
 
 import java.util.HashMap;
 import java.util.Map;
