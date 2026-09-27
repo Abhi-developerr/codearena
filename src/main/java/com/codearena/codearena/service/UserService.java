@@ -4,6 +4,7 @@ import com.codearena.dto.UserRequest;
 import com.codearena.entity.User;
 import com.codearena.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.codearena.exception.EmailAlreadyExistsException;
 
 @Service
 public class UserService {
@@ -15,6 +16,10 @@ public class UserService {
     }
 
     public User createUser(UserRequest request) {
+
+         if (userRepository.existsByEmail(request.getEmail())) {
+        throw new EmailAlreadyExistsException("Email already exists");
+    }
 
         User user = new User();
 
