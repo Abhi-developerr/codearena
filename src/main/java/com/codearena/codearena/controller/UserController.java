@@ -10,7 +10,6 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import com.codearena.codearena.dto.LoginResponse;
-import com.codearena.codearena.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
 
 @RestController
