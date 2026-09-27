@@ -3,16 +3,18 @@ package com.codearena.service;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.exception.UserNotFoundException;
+import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.dto.UserRequest;
 import com.codearena.entity.User;
 import com.codearena.exception.EmailAlreadyExistsException;
 import com.codearena.repository.UserRepository;
-import org.springframework.security.crypto.password.
+import org.springframework.security.core.Authentication;
 import com.codearena.dto.LoginRequest;
-import com.codearena.exception.UserNotFoundException;
 import com.codearena.security.JwtService;
 import io.jsonwebtoken.JwtException;
-
+import com.codearena.security.CustomUserDetails;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -22,15 +24,18 @@ public class UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
+  private final AuthenticationManager authenticationManager;
 
    public UserService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
-        JwtService jwtService) {
+        JwtService jwtService,
+        AuthenticationManager authenticationManager) {
 
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
+    this.authenticationManager = authenticationManager;
 }
 
     public User createUser(UserRequest request) {
@@ -57,35 +62,29 @@ public class UserService {
         return userRepository.save(user);
     }
 
-   public LoginResponse login(LoginRequest request) {
+public LoginResponse login(LoginRequest request) {
 
-    User user = userRepository.findByEmail(request.getEmail())
-            .orElseThrow(() ->
-                    new UserNotFoundException(
-                            "Invalid email or password"
+    Authentication authentication =
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
                     )
             );
 
-    boolean passwordMatches =
-            passwordEncoder.matches(
-                    request.getPassword(),
-                    user.getPassword()
-            );
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
 
-    if (!passwordMatches) {
-        throw new UserNotFoundException(
-                "Invalid email or password"
-        );
-    }
+    User user = userDetails.getUser();
 
     String token = jwtService.generateToken(user);
 
-return new LoginResponse(
-        user.getId(),
-        user.getName(),
-        user.getEmail(),
-        token
-);
+    return new LoginResponse(
+            user.getId(),
+            user.getName(),
+            user.getEmail(),
+            token
+    );
 }
 public boolean isTokenValid(String token, User user) {
 
