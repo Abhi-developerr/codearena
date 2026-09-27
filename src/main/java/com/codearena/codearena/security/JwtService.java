@@ -4,12 +4,14 @@ import com.codearena.entity.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 
 @Service
 public class JwtService {
@@ -64,5 +66,20 @@ public String extractRole(String token) {
             .getPayload();
 
     return claims.get("role", String.class);
+}
+public boolean isTokenValid(
+        String token,
+        UserDetails userDetails) {
+
+    try {
+
+        String email = extractEmail(token);
+
+        return email.equals(userDetails.getUsername());
+
+    } catch (JwtException | IllegalArgumentException exception) {
+
+        return false;
+    }
 }
 }
