@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import java.util.List;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -13,6 +14,7 @@ import com.codearena.entity.User;
 import com.codearena.repository.UserRepository;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -44,7 +46,10 @@ protected void doFilterInternal(
     String token = authHeader.substring(7);
 try {
 
+ SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_USER");
+
     String email = jwtService.extractEmail(token);
+    String role = jwtService.extractRole(token);
 
     User user = userRepository.findByEmail(email)
             .orElse(null);
@@ -55,7 +60,7 @@ try {
                 new UsernamePasswordAuthenticationToken(
                         user,
                         null,
-                        null
+                        List.of(authority)
                 );
 
         SecurityContextHolder

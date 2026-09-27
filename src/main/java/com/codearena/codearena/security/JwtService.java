@@ -27,13 +27,14 @@ public class JwtService {
         );
 
         return Jwts.builder()
-                .subject(user.getEmail())
-                .issuedAt(new Date())
-                .expiration(
-                        new Date(System.currentTimeMillis() + expiration)
-                )
-                .signWith(key)
-                .compact();
+        .subject(user.getEmail())
+        .claim("role", user.getRole())
+        .issuedAt(new Date())
+        .expiration(
+                new Date(System.currentTimeMillis() + expiration)
+        )
+        .signWith(key)
+        .compact();
     }
     public String extractEmail(String token) {
 
@@ -48,5 +49,20 @@ public class JwtService {
             .getPayload();
 
     return claims.getSubject();
+}
+
+public String extractRole(String token) {
+
+    SecretKey key = Keys.hmacShaKeyFor(
+            secret.getBytes(StandardCharsets.UTF_8)
+    );
+
+    Claims claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+
+    return claims.get("role", String.class);
 }
 }
