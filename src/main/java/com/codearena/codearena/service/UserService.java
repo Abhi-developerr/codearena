@@ -7,6 +7,7 @@ import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.codearena.dto.UserRequest;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.exception.EmailAlreadyExistsException;
+import org.springframework.security.core.AuthenticationException;
 import com.codearena.codearena.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import com.codearena.codearena.security.JwtService;
@@ -62,27 +63,37 @@ public class UserService {
 
 public LoginResponse login(LoginRequest request) {
 
-    Authentication authentication =
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
+    try {
 
-    CustomUserDetails userDetails =
-            (CustomUserDetails) authentication.getPrincipal();
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                request.getEmail(),
+                                request.getPassword()
+                        )
+                );
 
-    User user = userDetails.getUser();
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
 
-    String token = jwtService.generateToken(user);
+        User user = userDetails.getUser();
 
-    return new LoginResponse(
-            user.getId(),
-            user.getName(),
-            user.getEmail(),
-            token
-    );
+        String token =
+                jwtService.generateToken(user);
+
+        return new LoginResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                token
+        );
+
+    } catch (AuthenticationException exception) {
+
+        throw new UserNotFoundException(
+                "Invalid email or password"
+        );
+    }
 }
 public boolean isTokenValid(String token, User user) {
 
