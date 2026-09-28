@@ -7,6 +7,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.codearena.codearena.dto.ChangePasswordRequest;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.dto.UserRequest;
@@ -113,5 +114,38 @@ public boolean isTokenValid(String token, User user) {
 
         return false;
     }
+}
+
+public void changePassword(
+        Long userId,
+        ChangePasswordRequest request) {
+
+    User user = userRepository.findById(userId)
+            .orElseThrow(() ->
+                    new UserNotFoundException(
+                            "User not found"
+                    )
+            );
+
+    boolean passwordMatches =
+            passwordEncoder.matches(
+                    request.getOldPassword(),
+                    user.getPassword()
+            );
+
+    if (!passwordMatches) {
+        throw new UserNotFoundException(
+                "Old password is incorrect"
+        );
+    }
+
+    String newHashedPassword =
+            passwordEncoder.encode(
+                    request.getNewPassword()
+            );
+
+    user.setPassword(newHashedPassword);
+
+    userRepository.save(user);
 }
 }

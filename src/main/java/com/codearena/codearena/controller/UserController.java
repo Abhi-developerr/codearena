@@ -1,11 +1,13 @@
 package com.codearena.codearena.controller;
 
+import com.codearena.codearena.dto.ChangePasswordRequest;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.security.CustomUserDetails;
+import com.codearena.dto.ChangePasswordRequest;
+import com.codearena.security.CustomUserDetails;
 import com.codearena.codearena.dto.UserRequest;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.service.UserService;
-import jakarta.validation.Valid;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -48,4 +50,24 @@ public String getProfile(Authentication authentication) {
 
     return "Logged in as: " + user.getEmail();
 }
+
+@PutMapping("/change-password")
+public String changePassword(
+        @Valid @RequestBody ChangePasswordRequest request,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    Long userId =
+            userDetails.getUser().getId();
+
+    userService.changePassword(
+            userId,
+            request
+    );
+
+    return "Password changed successfully";
+}
+
 }
