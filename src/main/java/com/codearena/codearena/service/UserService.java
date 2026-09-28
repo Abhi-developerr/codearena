@@ -1,21 +1,23 @@
 package com.codearena.codearena.service;
 
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
-import com.codearena.codearena.exception.UserNotFoundException;
-import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.codearena.dto.UserRequest;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.exception.EmailAlreadyExistsException;
-import org.springframework.security.core.AuthenticationException;
+import com.codearena.codearena.exception.UserNotFoundException;
 import com.codearena.codearena.repository.UserRepository;
-import org.springframework.security.core.Authentication;
+import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.codearena.security.JwtService;
+
 import io.jsonwebtoken.JwtException;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
@@ -38,13 +40,14 @@ public class UserService {
 }
 
     public User createUser(UserRequest request) {
+String email =
+        request.getEmail().trim().toLowerCase();
 
-        if (userRepository.existsByEmail(request.getEmail())) {
-
-            throw new EmailAlreadyExistsException(
-                    "Email already exists"
-            );
-        }
+if (userRepository.existsByEmail(email)) {
+    throw new EmailAlreadyExistsException(
+            "Email already exists"
+    );
+}
 
         User user = new User();
 
@@ -65,13 +68,16 @@ public LoginResponse login(LoginRequest request) {
 
     try {
 
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                request.getEmail(),
-                                request.getPassword()
-                        )
-                );
+        String email =
+        request.getEmail().trim().toLowerCase();
+
+Authentication authentication =
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        email,
+                        request.getPassword()
+                )
+        );
 
         CustomUserDetails userDetails =
                 (CustomUserDetails) authentication.getPrincipal();

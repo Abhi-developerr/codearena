@@ -1,10 +1,13 @@
 package com.codearena.codearena.entity;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import com.codearena.entity.Role;
 
 @Entity
 @Table(name = "users")
@@ -20,7 +23,8 @@ public class User {
 
     private String password;
 
-    private String role;
+    @Enumerated(EnumType.STRING)
+     private Role role;
 
     public Long getId() {
         return id;

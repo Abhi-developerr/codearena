@@ -54,7 +54,7 @@ public boolean isEnabled() {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(
                 new SimpleGrantedAuthority(
-                        "ROLE_" + user.getRole()
+                        "ROLE_" + user.getRole().name()
                 )
         );
     }
