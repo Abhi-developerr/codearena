@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.codearena.codearena.dto.ChangePasswordRequest;
+import com.codearena.codearena.entity.RefreshToken;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.dto.UserRequest;
@@ -27,17 +28,20 @@ public class UserService {
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final AuthenticationManager authenticationManager;
+  private final RefreshTokenService refreshTokenService;
 
    public UserService(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
         JwtService jwtService,
-        AuthenticationManager authenticationManager) {
+        AuthenticationManager authenticationManager,
+        RefreshTokenService refreshTokenService) {
 
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.authenticationManager = authenticationManager;
+    this.refreshTokenService = refreshTokenService;
 }
 
     public User createUser(UserRequest request) {
@@ -88,11 +92,15 @@ Authentication authentication =
         String token =
                 jwtService.generateToken(user);
 
+                RefreshToken refreshToken =
+        refreshTokenService.createRefreshToken(user);
+
         return new LoginResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
-                token
+                token,
+                refreshToken.getToken()
         );
 
     } catch (AuthenticationException exception) {

@@ -6,17 +6,20 @@ public class LoginResponse {
     private String name;
     private String email;
     private String token;
+    private String refreshToken;
 
    public LoginResponse(
         Long id,
         String name,
         String email,
-        String token) {
+        String token,
+        String refreshToken) {
 
     this.id = id;
     this.name = name;
     this.email = email;
     this.token = token;
+    this.refreshToken = refreshToken;
 }
     public Long getId() {
         return id;
@@ -33,4 +36,8 @@ public class LoginResponse {
     public String getToken() {
     return token;
 }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
 }
