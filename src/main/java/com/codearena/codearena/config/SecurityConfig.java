@@ -15,28 +15,29 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.codearena.codearena.security.CustomUserDetailsService;
 import com.codearena.codearena.security.JwtAuthenticationFilter;
-
-import jakarta.servlet.http.HttpServletResponse;
-import tools.jackson.databind.ObjectMapper;
-import com.codearena.codearena.exception.ErrorResponse;
+import com.codearena.codearena.security.RestAccessDeniedHandler;
+import com.codearena.codearena.security.RestAuthenticationEntryPoint;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
- private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
   private final CustomUserDetailsService userDetailsService;
-  private final ObjectMapper objectMapper;
+  private final RestAuthenticationEntryPoint authenticationEntryPoint;
+  private final RestAccessDeniedHandler accessDeniedHandler;
 
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
             CustomUserDetailsService userDetailsService,
-            ObjectMapper objectMapper) {
+            RestAuthenticationEntryPoint authenticationEntryPoint,
+            RestAccessDeniedHandler accessDeniedHandler) {
 
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
-        this.objectMapper = objectMapper;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
     }
 
     @Bean
@@ -87,30 +88,14 @@ public DaoAuthenticationProvider authenticationProvider() {
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
                 )
-                .exceptionHandling(exception -> exception
+               .exceptionHandling(exception -> exception
+
         .authenticationEntryPoint(
-                (request, response, authException) -> {
+                authenticationEntryPoint
+        )
 
-                    ErrorResponse errorResponse =
-                            new ErrorResponse(
-                                    401,
-                                    "Authentication required",
-                                    null
-                            );
-
-                    response.setStatus(
-                            HttpServletResponse.SC_UNAUTHORIZED
-                    );
-
-                    response.setContentType(
-                            "application/json"
-                    );
-
-                    objectMapper.writeValue(
-                            response.getWriter(),
-                            errorResponse
-                    );
-                }
+        .accessDeniedHandler(
+                accessDeniedHandler
         )
 );
         return http.build();
