@@ -11,6 +11,7 @@ import com.codearena.codearena.entity.User;
 import com.codearena.codearena.exception.RefreshTokenExpiredException;
 import com.codearena.codearena.exception.RefreshTokenNotFoundException;
 import com.codearena.codearena.repository.RefreshTokenRepository;
+import com.codearena.codearena.security.GeneratedRefreshToken;
 import com.codearena.codearena.security.JwtService;
 import com.codearena.codearena.security.TokenHashService;
 
@@ -34,18 +35,18 @@ public class RefreshTokenService {
         this.tokenHashService = tokenHashService;
     }
 
-    public RefreshToken createRefreshToken(User user) {
+   public GeneratedRefreshToken createRefreshToken(User user) {
 
     String rawToken =
             UUID.randomUUID().toString();
 
-    String hashedToken =
+    String tokenHash =
             tokenHashService.hash(rawToken);
 
     RefreshToken refreshToken =
             new RefreshToken();
 
-    refreshToken.setToken(hashedToken);
+    refreshToken.setTokenHash(tokenHash);
 
     refreshToken.setExpiresAt(
             Instant.now().plusSeconds(
@@ -59,10 +60,11 @@ public class RefreshTokenService {
             refreshTokenRepository.save(
                     refreshToken
             );
-    
-    savedToken.setToken(rawToken);
 
-    return savedToken;
+    return new GeneratedRefreshToken(
+            rawToken,
+            savedToken
+    );
 }
 
     public RefreshToken verifyExpiration(
@@ -109,8 +111,8 @@ public RefreshResponse refreshAccessToken(
             oldRefreshToken
     );
 
-    RefreshToken newRefreshToken =
-            createRefreshToken(user);
+    GeneratedRefreshToken generatedRefreshToken =
+        refreshTokenService.createRefreshToken(user);
 
     String newAccessToken =
             jwtService.generateToken(user);

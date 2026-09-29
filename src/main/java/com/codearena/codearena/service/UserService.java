@@ -101,7 +101,7 @@ Authentication authentication =
                 user.getName(),
                 user.getEmail(),
                 token,
-                refreshToken.getToken()
+                generatedRefreshToken.getRawToken()
         );
 
     } catch (AuthenticationException exception) {
