@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import com.codearena.codearena.exception.ProblemNotFoundException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
@@ -145,5 +146,21 @@ public ResponseEntity<ErrorResponse> handleInvalidCredentials(
     return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)
             .body(error);
+}
+
+@ExceptionHandler(ProblemNotFoundException.class)
+public ResponseEntity<ErrorResponse> handleProblemNotFound(
+        ProblemNotFoundException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    404,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(errorResponse);
 }
 }

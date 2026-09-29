@@ -4,8 +4,11 @@ import com.codearena.codearena.dto.ProblemRequest;
 import com.codearena.codearena.dto.ProblemResponse;
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.repository.ProblemRepository;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import com.codearena.codearena.exception.ProblemNotFoundException;
 
 @Service
 public class ProblemService {
@@ -42,4 +45,24 @@ public class ProblemService {
                 savedProblem.getOutputFormat()
         );
     }
+    public ProblemResponse getProblemById(Long id) {
+
+    Problem problem =
+            problemRepository.findById(id)
+                    .orElseThrow(() ->
+                            new ProblemNotFoundException(
+                                    "Problem not found"
+                            )
+                    );
+
+    return new ProblemResponse(
+            problem.getId(),
+            problem.getTitle(),
+            problem.getDescription(),
+            problem.getDifficulty(),
+            problem.getConstraints(),
+            problem.getInputFormat(),
+            problem.getOutputFormat()
+    );
+}
 }
