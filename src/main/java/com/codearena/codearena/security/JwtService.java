@@ -2,6 +2,7 @@ package com.codearena.codearena.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.concurrent.atomic.LongAccumulator;
 
 import javax.crypto.SecretKey;
 
@@ -78,7 +79,7 @@ public boolean isTokenValid(
     }
 }
 
-public Long extractTokenVersion(String token) {
+public long extractTokenVersion(String token) {
 
     SecretKey key = Keys.hmacShaKeyFor(
             secret.getBytes(StandardCharsets.UTF_8)

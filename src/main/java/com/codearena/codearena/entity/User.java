@@ -24,7 +24,7 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private final Long tokenVersion = 0L;
+    private final long tokenVersion = 0L;
 
     @Enumerated(EnumType.STRING)
      private Role role;
@@ -65,11 +65,11 @@ public class User {
         this.role = role;
     }
 
-    public Long getTokenVersion() {
+    public long getTokenVersion() {
         return tokenVersion;
     }
 
-    public void setTokenVersion(Long tokenVersion) {
+    public void setTokenVersion(long tokenVersion) {
         this.tokenVersion = tokenVersion;
     }
 }

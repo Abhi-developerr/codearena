@@ -2,6 +2,7 @@ package com.codearena.codearena.service;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -126,7 +127,7 @@ public boolean isTokenValid(String token, User user) {
         return false;
     }
 }
-
+@Transactional
 public void changePassword(
         Long userId,
         ChangePasswordRequest request) {
@@ -156,6 +157,10 @@ public void changePassword(
             );
 
     user.setPassword(newHashedPassword);
+    user.setTokenVersion(
+        user.getTokenVersion() + 1
+);
+
 
     userRepository.save(user);
     refreshTokenService.deleteByUserId(
