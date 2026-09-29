@@ -1,6 +1,7 @@
 package com.codearena.codearena.exception;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -42,12 +43,11 @@ public ResponseEntity<ErrorResponse> handleUserNotFound(
             .body(error);
 }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+   @ExceptionHandler(MethodArgumentNotValidException.class)
 public ResponseEntity<ErrorResponse> handleValidationException(
         MethodArgumentNotValidException exception) {
 
-    Map<String, String> errors =
-            new HashMap<>();
+    Map<String, String> errors = new LinkedHashMap<>();
 
     exception.getBindingResult()
             .getFieldErrors()
@@ -58,7 +58,7 @@ public ResponseEntity<ErrorResponse> handleValidationException(
                     )
             );
 
-    ErrorResponse error =
+    ErrorResponse errorResponse =
             new ErrorResponse(
                     400,
                     "Validation failed",
@@ -67,7 +67,7 @@ public ResponseEntity<ErrorResponse> handleValidationException(
 
     return ResponseEntity
             .status(HttpStatus.BAD_REQUEST)
-            .body(error);
+            .body(errorResponse);
 }
 
     @ExceptionHandler(RefreshTokenNotFoundException.class)
