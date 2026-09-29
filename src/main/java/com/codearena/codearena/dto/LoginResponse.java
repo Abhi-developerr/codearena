@@ -1,12 +1,11 @@
 package com.codearena.codearena.dto;
 
 public class LoginResponse {
-
-    private Long id;
-    private String name;
-    private String email;
-    private String token;
-    private String refreshToken;
+    private final Long id;
+    private final String name;
+    private final String email;
+    private final String token;
+    private final String refreshToken;
 
    public LoginResponse(
         Long id,

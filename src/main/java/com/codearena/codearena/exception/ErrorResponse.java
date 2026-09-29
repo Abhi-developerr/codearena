@@ -4,9 +4,9 @@ import java.util.Map;
 
 public class ErrorResponse {
 
-    private int status;
-    private String message;
-    private Map<String, String> errors;
+    private final int status;
+    private final String message;
+    private final Map<String, String> errors;
 
     public ErrorResponse(
             int status,
