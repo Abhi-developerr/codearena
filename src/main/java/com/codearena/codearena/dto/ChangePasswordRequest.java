@@ -1,19 +1,30 @@
 package com.codearena.codearena.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public class ChangePasswordRequest {
 
-    @NotBlank(message = "Old password is required")
-    private String oldPassword;
+@Schema(
+        description = "Current password of the authenticated user",
+        example = "OldPass123",
+        writeOnly = true
+)
+@NotBlank(message = "Old password is required")
+private String oldPassword;
 
-    @NotBlank(message = "New password is required")
-    @Size(
+   @Schema(
+        description = "New password for the authenticated user",
+        example = "NewStrongPass123",
+        writeOnly = true
+)
+@NotBlank(message = "New password is required")
+@Size(
         min = 8,
         message = "New password must contain at least 8 characters"
-    )
-    private String newPassword;
+)
+private String newPassword;
 
     public ChangePasswordRequest() {
     }

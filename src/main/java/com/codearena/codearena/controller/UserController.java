@@ -2,6 +2,8 @@ package com.codearena.codearena.controller;
 
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.codearena.codearena.dto.ChangePasswordRequest;
 import com.codearena.codearena.dto.LoginRequest;
@@ -17,17 +20,26 @@ import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.dto.RefreshResponse;
 import com.codearena.codearena.dto.RefreshTokenRequest;
 import com.codearena.codearena.dto.UserRequest;
+import com.codearena.codearena.dto.UserResponse;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.codearena.service.RefreshTokenService;
 import com.codearena.codearena.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(
+        name = "User & Authentication",
+        description = "User registration, authentication, profile and account management APIs"
+)
 public class UserController {
 
     private final UserService userService;
@@ -50,14 +62,33 @@ public String adminOnly() {
     return "Welcome Admin!";
 }
 
-    @PostMapping
-    @Operation(
-        summary = "Create a new user",
-        description = "Creates a new user with the provided details."
-    )
-    public User createUser(@Valid @RequestBody UserRequest request) {
-        return userService.createUser(request);
-    }
+   @PostMapping
+@Operation(
+        summary = "Register a new user",
+        description = "Creates a new CodeArena user account."
+)
+@ApiResponses({
+
+        @ApiResponse(
+                responseCode = "201",
+                description = "User registered successfully"
+        ),
+
+        @ApiResponse(
+                responseCode = "400",
+                description = "Invalid request data"
+        ),
+
+        @ApiResponse(
+                responseCode = "409",
+                description = "Email already exists"
+        )
+})
+public User createUser(
+        @Valid @RequestBody UserRequest request) {
+
+    return userService.createUser(request);
+}
 
 @PostMapping("/refresh")
 public RefreshResponse refreshToken(
@@ -112,6 +143,26 @@ public Map<String, String> logout(
         summary = "User login",
         description = "Authenticates a user and returns an access token and refresh token."
 )
+@ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Login successful",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(
+                                implementation = LoginResponse.class
+                        )
+                )
+        ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Invalid request data"
+        ),
+        @ApiResponse(
+                responseCode = "401",
+                description = "Invalid email or password"
+        )
+})
 public LoginResponse login(
         @Valid @RequestBody LoginRequest request) {
 
