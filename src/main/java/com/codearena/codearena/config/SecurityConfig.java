@@ -71,7 +71,8 @@ public DaoAuthenticationProvider authenticationProvider() {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/users",
-                                "/api/users/login"
+                                "/api/users/login",
+                                 "/api/users/refresh"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

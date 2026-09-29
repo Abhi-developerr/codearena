@@ -3,15 +3,21 @@ package com.codearena.codearena.controller;
 import com.codearena.codearena.dto.ChangePasswordRequest;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.security.CustomUserDetails;
-import com.codearena.dto.ChangePasswordRequest;
-import com.codearena.security.CustomUserDetails;
+
+import jakarta.validation.Valid;
+
 import com.codearena.codearena.dto.UserRequest;
 import com.codearena.codearena.entity.User;
+import com.codearena.codearena.service.RefreshTokenService;
 import com.codearena.codearena.service.UserService;
 
+
 import org.springframework.security.access.prepost.PreAuthorize;
+import java.util.Map;
 import org.springframework.web.bind.annotation.*;
 import com.codearena.codearena.dto.LoginResponse;
+import com.codearena.codearena.dto.RefreshTokenRequest;
+
 import org.springframework.security.core.Authentication;
 
 @RestController
@@ -19,9 +25,11 @@ import org.springframework.security.core.Authentication;
 public class UserController {
 
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, RefreshTokenService refreshTokenService) {
         this.userService = userService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @GetMapping("/admin")
@@ -70,4 +78,18 @@ public String changePassword(
     return "Password changed successfully";
 }
 
+@PostMapping("/refresh")
+public Map<String, String> refreshToken(
+        @Valid @RequestBody RefreshTokenRequest request) {
+
+    String accessToken =
+            refreshTokenService.refreshAccessToken(
+                    request.getRefreshToken()
+            );
+
+    return Map.of(
+            "accessToken",
+            accessToken
+    );
+}
 }

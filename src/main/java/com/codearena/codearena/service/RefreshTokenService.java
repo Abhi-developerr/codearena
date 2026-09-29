@@ -1,8 +1,10 @@
-package com.codearena.service;
+package com.codearena.codearena.service;
 
-import com.codearena.entity.RefreshToken;
-import com.codearena.entity.User;
-import com.codearena.repository.RefreshTokenRepository;
+import com.codearena.codearena.entity.RefreshToken;
+import com.codearena.codearena.entity.User;
+import com.codearena.codearena.repository.RefreshTokenRepository;
+import com.codearena.codearena.security.JwtService;
+
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -12,12 +14,15 @@ import java.util.UUID;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+private final JwtService jwtService;
 
     public RefreshTokenService(
-            RefreshTokenRepository refreshTokenRepository) {
+            RefreshTokenRepository refreshTokenRepository,
+            JwtService jwtService) {
 
         this.refreshTokenRepository =
                 refreshTokenRepository;
+        this.jwtService = jwtService;
     }
 
     public RefreshToken createRefreshToken(User user) {
@@ -69,5 +74,18 @@ public class RefreshTokenService {
                             "Refresh token not found"
                     )
             );
+}
+
+public String refreshAccessToken(String token) {
+
+    RefreshToken refreshToken =
+            findByToken(token);
+
+    verifyExpiration(refreshToken);
+
+    User user =
+            refreshToken.getUser();
+
+    return jwtService.generateToken(user);
 }
 }
