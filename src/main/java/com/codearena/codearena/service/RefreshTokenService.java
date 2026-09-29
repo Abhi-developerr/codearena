@@ -12,43 +12,58 @@ import com.codearena.codearena.exception.RefreshTokenExpiredException;
 import com.codearena.codearena.exception.RefreshTokenNotFoundException;
 import com.codearena.codearena.repository.RefreshTokenRepository;
 import com.codearena.codearena.security.JwtService;
+import com.codearena.codearena.security.TokenHashService;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
+    private final TokenHashService tokenHashService;
 
     public RefreshTokenService(
             RefreshTokenRepository refreshTokenRepository,
-            JwtService jwtService) {
+            JwtService jwtService,
+            TokenHashService tokenHashService) {
 
         this.refreshTokenRepository =
                 refreshTokenRepository;
         this.jwtService = jwtService;
+        this.tokenHashService = tokenHashService;
     }
 
     public RefreshToken createRefreshToken(User user) {
 
-        RefreshToken refreshToken =
-                new RefreshToken();
+    String rawToken =
+            UUID.randomUUID().toString();
 
-        refreshToken.setToken(
-                UUID.randomUUID().toString()
-        );
+    String hashedToken =
+            tokenHashService.hash(rawToken);
 
-        refreshToken.setExpiresAt(
-                Instant.now().plusSeconds(
-                        7 * 24 * 60 * 60
-                )
-        );
+    RefreshToken refreshToken =
+            new RefreshToken();
 
-        refreshToken.setUser(user);
+    refreshToken.setToken(hashedToken);
 
-        return refreshTokenRepository.save(
-                refreshToken
-        );
-    }
+    refreshToken.setExpiresAt(
+            Instant.now().plusSeconds(
+                    7 * 24 * 60 * 60
+            )
+    );
+
+    refreshToken.setUser(user);
+
+    RefreshToken savedToken =
+            refreshTokenRepository.save(
+                    refreshToken
+            );
+    
+    savedToken.setToken(rawToken);
+
+    return savedToken;
+}
 
     public RefreshToken verifyExpiration(
             RefreshToken refreshToken) {
@@ -78,7 +93,7 @@ public class RefreshTokenService {
         )
 );
 }
-
+@Transactional 
 public RefreshResponse refreshAccessToken(
         String token) {
 
