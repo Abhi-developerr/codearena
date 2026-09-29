@@ -1,5 +1,7 @@
 package com.codearena.codearena.dto;
 
+import java.time.Instant;
+
 import com.codearena.codearena.entity.Difficulty;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -48,6 +50,18 @@ public class ProblemResponse {
     )
     private String outputFormat;
 
+@Schema(
+    description = "Time when the problem was created",
+    example = "2026-09-29T18:20:00Z"
+)
+private Instant createdAt;
+
+@Schema(
+    description = "Time when the problem was last updated",
+    example = "2026-09-29T18:30:00Z"
+)
+private Instant updatedAt;
+
     public ProblemResponse() {
     }
 
@@ -58,7 +72,9 @@ public class ProblemResponse {
             Difficulty difficulty,
             String constraints,
             String inputFormat,
-            String outputFormat) {
+            String outputFormat,
+            Instant createdAt,
+            Instant updatedAt) {
 
         this.id = id;
         this.title = title;
@@ -67,6 +83,8 @@ public class ProblemResponse {
         this.constraints = constraints;
         this.inputFormat = inputFormat;
         this.outputFormat = outputFormat;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 
     public Long getId() {
@@ -96,4 +114,13 @@ public class ProblemResponse {
     public String getOutputFormat() {
         return outputFormat;
     }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
 }

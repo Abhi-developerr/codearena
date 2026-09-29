@@ -34,32 +34,44 @@ public class ProblemRequest {
         return title;
     }
 
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
     public String getDescription() {
         return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public Difficulty getDifficulty() {
         return difficulty;
     }
 
+    public void setDifficulty(Difficulty difficulty) {
+        this.difficulty = difficulty;
+    }
+
     public String getConstraints() {
         return constraints;
-    }
-
-    public String getInputFormat() {
-        return inputFormat;
-    }
-
-    public String getOutputFormat() {
-        return outputFormat;
     }
 
     public void setConstraints(String constraints) {
         this.constraints = constraints;
     }
 
+    public String getInputFormat() {
+        return inputFormat;
+    }
+
     public void setInputFormat(String inputFormat) {
         this.inputFormat = inputFormat;
+    }
+
+    public String getOutputFormat() {
+        return outputFormat;
     }
 
     public void setOutputFormat(String outputFormat) {
