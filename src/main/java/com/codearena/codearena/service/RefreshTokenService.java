@@ -59,4 +59,15 @@ public class RefreshTokenService {
 
         return refreshToken;
     }
+
+    public RefreshToken findByToken(String token) {
+
+    return refreshTokenRepository
+            .findByToken(token)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "Refresh token not found"
+                    )
+            );
+}
 }
