@@ -2,8 +2,7 @@ package com.codearena.codearena.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.concurrent.atomic.LongAccumulator;
-
+import java.time.Duration;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -20,17 +19,24 @@ import io.jsonwebtoken.security.Keys;
 @Service
 public class JwtService {
 
+        @Value("${jwt.access-token-expiration}")
+        private Duration accessTokenExpiration;
+
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    private SecretKey getSigningKey() {
+
+    return Keys.hmacShaKeyFor(
+            secret.getBytes(
+                    StandardCharsets.UTF_8
+            )
+    );
+}
 
    public String generateToken(User user) {
 
-    SecretKey key = Keys.hmacShaKeyFor(
-            secret.getBytes(StandardCharsets.UTF_8)
-    );
+    SecretKey key = getSigningKey();
 
     return Jwts.builder()
             .subject(user.getEmail())
@@ -42,7 +48,7 @@ public class JwtService {
             .expiration(
                     new Date(
                             System.currentTimeMillis()
-                                    + expiration
+                                    + accessTokenExpiration.toMillis()
                     )
             )
             .signWith(key)
@@ -50,9 +56,7 @@ public class JwtService {
 }
     public String extractEmail(String token) {
 
-    SecretKey key = Keys.hmacShaKeyFor(
-            secret.getBytes(StandardCharsets.UTF_8)
-    );
+    SecretKey key = getSigningKey();
 
     Claims claims = Jwts.parser()
             .verifyWith(key)
@@ -69,11 +73,21 @@ public boolean isTokenValid(
 
     try {
 
-        String email = extractEmail(token);
+        String email =
+                extractEmail(token);
 
-        return email.equals(userDetails.getUsername());
+        if (email == null ||
+                email.isBlank()) {
 
-    } catch (JwtException | IllegalArgumentException exception) {
+            return false;
+        }
+
+        return email.equals(
+                userDetails.getUsername()
+        );
+
+    } catch (JwtException |
+             IllegalArgumentException exception) {
 
         return false;
     }
@@ -81,9 +95,7 @@ public boolean isTokenValid(
 
 public long extractTokenVersion(String token) {
 
-    SecretKey key = Keys.hmacShaKeyFor(
-            secret.getBytes(StandardCharsets.UTF_8)
-    );
+    SecretKey key = getSigningKey();
 
     Claims claims = Jwts.parser()
             .verifyWith(key)

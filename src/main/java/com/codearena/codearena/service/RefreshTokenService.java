@@ -1,5 +1,6 @@
 package com.codearena.codearena.service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -24,8 +25,9 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
     private final TokenHashService tokenHashService;
+
     @Value("${refresh-token.expiration}")
-    private long refreshTokenExpiration;
+    private Duration refreshTokenExpiration;
 
     public RefreshTokenService(
             RefreshTokenRepository refreshTokenRepository,
@@ -46,13 +48,12 @@ public class RefreshTokenService {
     String tokenHash =
             tokenHashService.hash(rawToken);
 
-    RefreshToken refreshToken =
-            new RefreshToken();
+    RefreshToken refreshToken = new RefreshToken();
 
     refreshToken.setTokenHash(tokenHash);
 
     refreshToken.setExpiresAt(
-            Instant.now().plusSeconds(
+            Instant.now().plus(
                     refreshTokenExpiration
             )
     );
