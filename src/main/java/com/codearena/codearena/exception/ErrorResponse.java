@@ -1,5 +1,6 @@
 package com.codearena.codearena.exception;
 
+import java.time.Instant;
 import java.util.Map;
 
 public class ErrorResponse {
@@ -7,6 +8,7 @@ public class ErrorResponse {
     private final int status;
     private final String message;
     private final Map<String, String> errors;
+    private final Instant timestamp;
 
     public ErrorResponse(
             int status,
@@ -16,6 +18,7 @@ public class ErrorResponse {
         this.status = status;
         this.message = message;
         this.errors = errors;
+        this.timestamp = Instant.now();
     }
 
     public int getStatus() {
@@ -29,4 +32,8 @@ public class ErrorResponse {
     public Map<String, String> getErrors() {
         return errors;
     }
+
+    public Instant getTimestamp() {
+    return timestamp;
+}
 }

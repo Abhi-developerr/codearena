@@ -3,6 +3,7 @@ package com.codearena.codearena.service;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.codearena.codearena.dto.RefreshResponse;
@@ -23,6 +24,8 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final JwtService jwtService;
     private final TokenHashService tokenHashService;
+    @Value("${refresh-token.expiration}")
+    private long refreshTokenExpiration;
 
     public RefreshTokenService(
             RefreshTokenRepository refreshTokenRepository,
@@ -50,7 +53,7 @@ public class RefreshTokenService {
 
     refreshToken.setExpiresAt(
             Instant.now().plusSeconds(
-                    7 * 24 * 60 * 60
+                    refreshTokenExpiration
             )
     );
 
@@ -85,19 +88,22 @@ public class RefreshTokenService {
         return refreshToken;
     }
 
-    public RefreshToken findByToken(String token) {
+public RefreshToken findByToken(String rawToken) {
+
+    String tokenHash =
+            tokenHashService.hash(rawToken);
 
     return refreshTokenRepository
-            .findByToken(token)
+            .findByTokenHash(tokenHash)
             .orElseThrow(() ->
-        new RefreshTokenNotFoundException(
-                "Refresh token not found"
-        )
-);
+                    new RefreshTokenNotFoundException(
+                            "Refresh token not found"
+                    )
+            );
 }
-@Transactional 
-public RefreshResponse refreshAccessToken(
-        String token) {
+
+@Transactional
+public RefreshResponse refreshAccessToken(String token) {
 
     RefreshToken oldRefreshToken =
             findByToken(token);
@@ -111,25 +117,31 @@ public RefreshResponse refreshAccessToken(
             oldRefreshToken
     );
 
-    GeneratedRefreshToken generatedRefreshToken =
-        refreshTokenService.createRefreshToken(user);
+    GeneratedRefreshToken newRefreshToken =
+            createRefreshToken(user);
 
     String newAccessToken =
             jwtService.generateToken(user);
 
     return new RefreshResponse(
             newAccessToken,
-            newRefreshToken.getToken()
+            newRefreshToken.getRawToken()
     );
 }
 
 public void deleteByToken(String token) {
 
-    RefreshToken refreshToken =
-            findByToken(token);
+    String tokenHash =
+            tokenHashService.hash(token);
 
-    refreshTokenRepository.delete(
-            refreshToken
-    );
+    refreshTokenRepository
+            .findByTokenHash(tokenHash)
+            .ifPresent(
+                    refreshTokenRepository::delete
+            );
+}
+public void deleteByUserId(Long userId) {
+
+    refreshTokenRepository.deleteByUserId(userId);
 }
 }

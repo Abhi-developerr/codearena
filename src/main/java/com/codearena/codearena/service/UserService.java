@@ -11,13 +11,15 @@ import com.codearena.codearena.dto.ChangePasswordRequest;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.dto.UserRequest;
-import com.codearena.codearena.entity.RefreshToken;
 import com.codearena.codearena.entity.Role;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.exception.EmailAlreadyExistsException;
+import com.codearena.codearena.exception.InvalidCredentialsException;
+import com.codearena.codearena.exception.InvalidPasswordException;
 import com.codearena.codearena.exception.UserNotFoundException;
 import com.codearena.codearena.repository.UserRepository;
 import com.codearena.codearena.security.CustomUserDetails;
+import com.codearena.codearena.security.GeneratedRefreshToken;
 import com.codearena.codearena.security.JwtService;
 
 import io.jsonwebtoken.JwtException;
@@ -93,7 +95,7 @@ Authentication authentication =
         String token =
                 jwtService.generateToken(user);
 
-                RefreshToken refreshToken =
+                GeneratedRefreshToken generatedRefreshToken =
         refreshTokenService.createRefreshToken(user);
 
         return new LoginResponse(
@@ -106,10 +108,10 @@ Authentication authentication =
 
     } catch (AuthenticationException exception) {
 
-        throw new UserNotFoundException(
-                "Invalid email or password"
-        );
-    }
+    throw new InvalidCredentialsException(
+            "Invalid email or password"
+    );
+}
 }
 public boolean isTokenValid(String token, User user) {
 
@@ -143,9 +145,9 @@ public void changePassword(
             );
 
     if (!passwordMatches) {
-        throw new UserNotFoundException(
-                "Old password is incorrect"
-        );
+        throw new InvalidPasswordException(
+        "Old password is incorrect"
+);
     }
 
     String newHashedPassword =
@@ -156,5 +158,8 @@ public void changePassword(
     user.setPassword(newHashedPassword);
 
     userRepository.save(user);
+    refreshTokenService.deleteByUserId(
+        user.getId()
+);
 }
 }

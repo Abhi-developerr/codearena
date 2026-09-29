@@ -3,75 +3,146 @@ package com.codearena.codearena.exception;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-   @ExceptionHandler(EmailAlreadyExistsException.class)
-public ErrorResponse handleEmailAlreadyExists(
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleEmailAlreadyExists(
         EmailAlreadyExistsException exception) {
 
-    return new ErrorResponse(
-            409,
-            exception.getMessage(),
-            null
-    );
-}
+        ErrorResponse error = new ErrorResponse(
+                409,
+                exception.getMessage(),
+                null
+        );
 
-@ExceptionHandler(UserNotFoundException.class)
-public ErrorResponse handleUserNotFound(
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(error);
+    }
+
+   @ExceptionHandler(UserNotFoundException.class)
+public ResponseEntity<ErrorResponse> handleUserNotFound(
         UserNotFoundException exception) {
 
-    return new ErrorResponse(
-            401,
-            exception.getMessage(),
-            null
-    );
+    ErrorResponse error =
+            new ErrorResponse(
+                    404,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(error);
 }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ErrorResponse handleValidationException(
-            MethodArgumentNotValidException exception) {
+public ResponseEntity<ErrorResponse> handleValidationException(
+        MethodArgumentNotValidException exception) {
 
-        Map<String, String> errors = new HashMap<>();
+    Map<String, String> errors =
+            new HashMap<>();
 
-        exception.getBindingResult()
-                .getFieldErrors()
-                .forEach(error ->
-                        errors.put(
-                                error.getField(),
-                                error.getDefaultMessage()
-                        )
-                );
+    exception.getBindingResult()
+            .getFieldErrors()
+            .forEach(error ->
+                    errors.put(
+                            error.getField(),
+                            error.getDefaultMessage()
+                    )
+            );
 
-        return new ErrorResponse(
-                400,
-                "Validation failed",
-                errors
-        );
-    }
+    ErrorResponse error =
+            new ErrorResponse(
+                    400,
+                    "Validation failed",
+                    errors
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(error);
+}
 
     @ExceptionHandler(RefreshTokenNotFoundException.class)
-public ErrorResponse handleRefreshTokenNotFound(
+public ResponseEntity<ErrorResponse> handleRefreshTokenNotFound(
         RefreshTokenNotFoundException exception) {
 
-    return new ErrorResponse(
+    ErrorResponse error = new ErrorResponse(
             401,
             exception.getMessage(),
             null
     );
+
+    return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(error);
 }
 
 @ExceptionHandler(RefreshTokenExpiredException.class)
-public ErrorResponse handleRefreshTokenExpired(
+public ResponseEntity<ErrorResponse> handleRefreshTokenExpired(
         RefreshTokenExpiredException exception) {
 
-    return new ErrorResponse(
+    ErrorResponse error = new ErrorResponse(
             401,
             exception.getMessage(),
             null
     );
+
+    return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(error);
+}
+
+@ExceptionHandler(InvalidPasswordException.class)
+public ResponseEntity<ErrorResponse> handleInvalidPassword(
+        InvalidPasswordException exception) {
+
+    ErrorResponse error = new ErrorResponse(
+            400,
+            exception.getMessage(),
+            null
+    );
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(error);
+}
+
+@ExceptionHandler(Exception.class)
+public ResponseEntity<ErrorResponse> handleGenericException(
+        Exception exception) {
+
+    ErrorResponse error = new ErrorResponse(
+            500,
+            "Internal server error",
+            null
+    );
+
+    return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(error);
+}
+
+@ExceptionHandler(InvalidCredentialsException.class)
+public ResponseEntity<ErrorResponse> handleInvalidCredentials(
+        InvalidCredentialsException exception) {
+
+    ErrorResponse error =
+            new ErrorResponse(
+                    401,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(error);
 }
 }
