@@ -1,4 +1,4 @@
-package com.codearena.dto;
+package com.codearena.codearena.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

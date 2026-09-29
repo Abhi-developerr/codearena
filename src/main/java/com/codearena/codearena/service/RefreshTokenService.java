@@ -2,7 +2,9 @@ package com.codearena.codearena.service;
 
 import com.codearena.codearena.entity.RefreshToken;
 import com.codearena.codearena.entity.User;
+import com.codearena.codearena.exception.RefreshTokenNotFoundException;
 import com.codearena.codearena.repository.RefreshTokenRepository;
+import com.codearena.codearena.exception.RefreshTokenExpiredException;
 import com.codearena.codearena.security.JwtService;
 
 import org.springframework.stereotype.Service;
@@ -57,9 +59,9 @@ private final JwtService jwtService;
                     refreshToken
             );
 
-            throw new RuntimeException(
-                    "Refresh token has expired"
-            );
+           throw new RefreshTokenExpiredException(
+        "Refresh token has expired"
+);
         }
 
         return refreshToken;
@@ -70,10 +72,10 @@ private final JwtService jwtService;
     return refreshTokenRepository
             .findByToken(token)
             .orElseThrow(() ->
-                    new RuntimeException(
-                            "Refresh token not found"
-                    )
-            );
+        new RefreshTokenNotFoundException(
+                "Refresh token not found"
+        )
+);
 }
 
 public String refreshAccessToken(String token) {

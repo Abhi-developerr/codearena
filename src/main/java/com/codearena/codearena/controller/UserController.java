@@ -48,15 +48,19 @@ public LoginResponse login(@Valid @RequestBody LoginRequest request) {
     return userService.login(request);
 }
 
-@GetMapping("/profile")
-public String getProfile(Authentication authentication) {
+@PostMapping("/refresh")
+public Map<String, String> refreshToken(
+        @Valid @RequestBody RefreshTokenRequest request) {
 
-    CustomUserDetails userDetails =
-            (CustomUserDetails) authentication.getPrincipal();
+    String accessToken =
+            refreshTokenService.refreshAccessToken(
+                    request.getRefreshToken()
+            );
 
-    User user = userDetails.getUser();
-
-    return "Logged in as: " + user.getEmail();
+    return Map.of(
+            "accessToken",
+            accessToken
+    );
 }
 
 @PutMapping("/change-password")
@@ -78,18 +82,5 @@ public String changePassword(
     return "Password changed successfully";
 }
 
-@PostMapping("/refresh")
-public Map<String, String> refreshToken(
-        @Valid @RequestBody RefreshTokenRequest request) {
 
-    String accessToken =
-            refreshTokenService.refreshAccessToken(
-                    request.getRefreshToken()
-            );
-
-    return Map.of(
-            "accessToken",
-            accessToken
-    );
-}
 }

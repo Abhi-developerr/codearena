@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.codearena.codearena.dto.ChangePasswordRequest;
 import com.codearena.codearena.entity.RefreshToken;
+import com.codearena.codearena.entity.Role;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.dto.UserRequest;
@@ -64,7 +65,7 @@ if (userRepository.existsByEmail(email)) {
 
         user.setPassword(hashedPassword);
 
-        user.setRole("USER");
+        user.setRole(Role.USER);
 
         return userRepository.save(user);
     }

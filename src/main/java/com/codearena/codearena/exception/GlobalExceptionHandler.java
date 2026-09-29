@@ -52,4 +52,26 @@ public ErrorResponse handleUserNotFound(
                 errors
         );
     }
+
+    @ExceptionHandler(RefreshTokenNotFoundException.class)
+public ErrorResponse handleRefreshTokenNotFound(
+        RefreshTokenNotFoundException exception) {
+
+    return new ErrorResponse(
+            401,
+            exception.getMessage(),
+            null
+    );
+}
+
+@ExceptionHandler(RefreshTokenExpiredException.class)
+public ErrorResponse handleRefreshTokenExpired(
+        RefreshTokenExpiredException exception) {
+
+    return new ErrorResponse(
+            401,
+            exception.getMessage(),
+            null
+    );
+}
 }

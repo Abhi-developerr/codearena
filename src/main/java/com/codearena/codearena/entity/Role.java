@@ -1,4 +1,4 @@
-package com.codearena.entity;
+package com.codearena.codearena.entity;
 
 public enum Role {
 

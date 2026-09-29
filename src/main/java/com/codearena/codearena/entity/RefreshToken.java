@@ -1,4 +1,4 @@
-package com.codearena.entity;
+package com.codearena.codearena.entity;
 
 import jakarta.persistence.*;
 
