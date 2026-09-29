@@ -3,8 +3,8 @@ package com.codearena.codearena.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -16,27 +16,32 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.codearena.codearena.security.CustomUserDetailsService;
 import com.codearena.codearena.security.JwtAuthenticationFilter;
 
+import jakarta.servlet.http.HttpServletResponse;
+import tools.jackson.databind.ObjectMapper;
+import com.codearena.codearena.exception.ErrorResponse;
+
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
  private final JwtAuthenticationFilter jwtAuthenticationFilter;
-private final CustomUserDetailsService userDetailsService;
+  private final CustomUserDetailsService userDetailsService;
+  private final ObjectMapper objectMapper;
+
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
-            CustomUserDetailsService userDetailsService) {
+            CustomUserDetailsService userDetailsService,
+            ObjectMapper objectMapper) {
 
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.userDetailsService = userDetailsService;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
-public AuthenticationManager authenticationManager(
-        AuthenticationConfiguration configuration)
-        throws Exception {
-
-    return configuration.getAuthenticationManager();
+public AuthenticationManager authenticationManager() {
+        return new ProviderManager(authenticationProvider());
 }
 
 @Bean
@@ -81,8 +86,33 @@ public DaoAuthenticationProvider authenticationProvider() {
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
-                );
+                )
+                .exceptionHandling(exception -> exception
+        .authenticationEntryPoint(
+                (request, response, authException) -> {
 
+                    ErrorResponse errorResponse =
+                            new ErrorResponse(
+                                    401,
+                                    "Authentication required",
+                                    null
+                            );
+
+                    response.setStatus(
+                            HttpServletResponse.SC_UNAUTHORIZED
+                    );
+
+                    response.setContentType(
+                            "application/json"
+                    );
+
+                    objectMapper.writeValue(
+                            response.getWriter(),
+                            errorResponse
+                    );
+                }
+        )
+);
         return http.build();
     }
 }

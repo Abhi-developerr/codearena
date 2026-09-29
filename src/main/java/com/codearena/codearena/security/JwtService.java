@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.codearena.codearena.entity.User;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -93,6 +92,17 @@ public class JwtService {
         return claims.getSubject();
     }
 
+    public long extractTokenVersion(String token) {
+
+        Claims claims =
+                extractAllClaims(token);
+
+        return claims.get(
+                "tokenVersion",
+                Long.class
+        );
+    }
+
     public boolean isTokenValid(
         String email,
         UserDetails userDetails) {
@@ -108,14 +118,4 @@ public class JwtService {
     );
 }
 
-    public long extractTokenVersion(String token) {
-
-        Claims claims =
-                extractAllClaims(token);
-
-        return claims.get(
-                "tokenVersion",
-                Long.class
-        );
-    }
 }
