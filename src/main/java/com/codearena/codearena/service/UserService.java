@@ -8,11 +8,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.codearena.codearena.dto.ChangePasswordRequest;
-import com.codearena.codearena.entity.RefreshToken;
-import com.codearena.codearena.entity.Role;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.LoginResponse;
 import com.codearena.codearena.dto.UserRequest;
+import com.codearena.codearena.entity.RefreshToken;
+import com.codearena.codearena.entity.Role;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.exception.EmailAlreadyExistsException;
 import com.codearena.codearena.exception.UserNotFoundException;
@@ -58,7 +58,7 @@ if (userRepository.existsByEmail(email)) {
         User user = new User();
 
         user.setName(request.getName());
-        user.setEmail(request.getEmail());
+        user.setEmail(email);
 
         String hashedPassword =
                 passwordEncoder.encode(request.getPassword());
