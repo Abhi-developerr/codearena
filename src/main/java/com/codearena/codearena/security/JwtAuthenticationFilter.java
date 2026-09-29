@@ -50,28 +50,40 @@ public class JwtAuthenticationFilter
 
         try {
 
-            String email =
-                    jwtService.extractEmail(token);
+           String email =
+        jwtService.extractEmail(token);
 
-            UserDetails userDetails =
-                    userDetailsService
-                            .loadUserByUsername(email);
+UserDetails userDetails =
+        userDetailsService
+                .loadUserByUsername(email);
 
-            if (jwtService.isTokenValid(
-                    token,
-                    userDetails)) {
+CustomUserDetails customUserDetails =
+        (CustomUserDetails) userDetails;
 
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+Long tokenVersion =
+        jwtService.extractTokenVersion(token);
 
-                SecurityContextHolder
-                        .getContext()
-                        .setAuthentication(authentication);
-            }
+Long currentVersion =
+        customUserDetails
+                .getUser()
+                .getTokenVersion();
+
+if (jwtService.isTokenValid(
+        token,
+        userDetails)
+        && tokenVersion.equals(currentVersion)) {
+
+    UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(
+                    userDetails,
+                    null,
+                    userDetails.getAuthorities()
+            );
+
+    SecurityContextHolder
+            .getContext()
+            .setAuthentication(authentication);
+}            
 
         } catch (Exception exception) {
 
@@ -80,4 +92,4 @@ public class JwtAuthenticationFilter
 
         filterChain.doFilter(request, response);
     }
-}
+        }

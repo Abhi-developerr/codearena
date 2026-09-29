@@ -89,11 +89,12 @@ public ResponseEntity<ErrorResponse> handleRefreshTokenNotFound(
 public ResponseEntity<ErrorResponse> handleRefreshTokenExpired(
         RefreshTokenExpiredException exception) {
 
-    ErrorResponse error = new ErrorResponse(
-            401,
-            exception.getMessage(),
-            null
-    );
+    ErrorResponse error =
+            new ErrorResponse(
+                    401,
+                    "Invalid refresh token",
+                    null
+            );
 
     return ResponseEntity
             .status(HttpStatus.UNAUTHORIZED)

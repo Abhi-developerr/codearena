@@ -1,5 +1,6 @@
 package com.codearena.codearena.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -21,6 +22,9 @@ public class User {
     private String email;
 
     private String password;
+
+    @Column(nullable = false)
+    private final Long tokenVersion = 0L;
 
     @Enumerated(EnumType.STRING)
      private Role role;
@@ -59,5 +63,13 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public Long getTokenVersion() {
+        return tokenVersion;
+    }
+
+    public void setTokenVersion(Long tokenVersion) {
+        this.tokenVersion = tokenVersion;
     }
 }

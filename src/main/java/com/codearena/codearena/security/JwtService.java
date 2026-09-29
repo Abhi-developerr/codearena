@@ -33,6 +33,10 @@ public class JwtService {
 
     return Jwts.builder()
             .subject(user.getEmail())
+            .claim(
+                "tokenVersion",
+                user.getTokenVersion()
+            )
             .issuedAt(new Date())
             .expiration(
                     new Date(
@@ -72,5 +76,20 @@ public boolean isTokenValid(
 
         return false;
     }
+}
+
+public Long extractTokenVersion(String token) {
+
+    SecretKey key = Keys.hmacShaKeyFor(
+            secret.getBytes(StandardCharsets.UTF_8)
+    );
+
+    Claims claims = Jwts.parser()
+            .verifyWith(key)
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
+
+    return claims.get("tokenVersion", Long.class);
 }
 }
