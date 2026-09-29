@@ -22,6 +22,8 @@ import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.codearena.service.RefreshTokenService;
 import com.codearena.codearena.service.UserService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 
 @RestController
@@ -37,20 +39,25 @@ public class UserController {
     }
 
     @GetMapping("/admin")
+@Operation(
+        summary = "Admin-only endpoint",
+        description = "Accessible only to users with the ADMIN role."
+)
 @PreAuthorize("hasRole('ADMIN')")
+@SecurityRequirement(name = "bearerAuth")
 public String adminOnly() {
+
     return "Welcome Admin!";
 }
 
     @PostMapping
+    @Operation(
+        summary = "Create a new user",
+        description = "Creates a new user with the provided details."
+    )
     public User createUser(@Valid @RequestBody UserRequest request) {
         return userService.createUser(request);
     }
-
- @PostMapping("/login")
-public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-    return userService.login(request);
-}
 
 @PostMapping("/refresh")
 public RefreshResponse refreshToken(
@@ -63,6 +70,11 @@ public RefreshResponse refreshToken(
 }
 
 @PutMapping("/change-password")
+@Operation(
+        summary = "Change password",
+        description = "Changes the password of the currently authenticated user."
+)
+@SecurityRequirement(name = "bearerAuth")
 public String changePassword(
         @Valid @RequestBody ChangePasswordRequest request,
         Authentication authentication) {
@@ -95,4 +107,31 @@ public Map<String, String> logout(
     );
 }
 
+@PostMapping("/login")
+@Operation(
+        summary = "User login",
+        description = "Authenticates a user and returns an access token and refresh token."
+)
+public LoginResponse login(
+        @Valid @RequestBody LoginRequest request) {
+
+    return userService.login(request);
+}
+
+@GetMapping("/profile")
+@Operation(
+        summary = "Get user profile",
+        description = "Returns the profile information of the currently authenticated user."
+)
+@SecurityRequirement(name = "bearerAuth")
+public String getProfile(
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    User user = userDetails.getUser();
+
+    return "Welcome, " + user.getName() + "! Your email is " + user.getEmail();
+}
 }

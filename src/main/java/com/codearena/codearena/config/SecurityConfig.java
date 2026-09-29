@@ -45,8 +45,7 @@ public AuthenticationManager authenticationManager() {
         return new ProviderManager(authenticationProvider());
 }
 
-@Bean
-public DaoAuthenticationProvider authenticationProvider() {
+private DaoAuthenticationProvider authenticationProvider() {
 
     DaoAuthenticationProvider provider =
             new DaoAuthenticationProvider(userDetailsService);
@@ -79,7 +78,10 @@ public DaoAuthenticationProvider authenticationProvider() {
                                 "/api/users",
                                 "/api/users/login",
                                  "/api/users/refresh",
-                                 "/api/users/logout"
+                                 "/api/users/logout",
+                                 "/swagger-ui.html",
+                                 "/swagger-ui/**",
+                                 "/v3/api-docs/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
