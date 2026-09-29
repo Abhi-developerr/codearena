@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.codearena.codearena.exception.ProblemNotFoundException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
@@ -161,6 +162,22 @@ public ResponseEntity<ErrorResponse> handleProblemNotFound(
 
     return ResponseEntity
             .status(HttpStatus.NOT_FOUND)
+            .body(errorResponse);
+}
+
+@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+public ResponseEntity<ErrorResponse> handleTypeMismatch(
+        MethodArgumentTypeMismatchException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    400,
+                    "Invalid request parameter",
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
             .body(errorResponse);
 }
 }
