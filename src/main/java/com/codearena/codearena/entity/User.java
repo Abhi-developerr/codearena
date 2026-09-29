@@ -24,7 +24,7 @@ public class User {
     private String password;
 
     @Column(nullable = false)
-    private final long tokenVersion = 0L;
+    private long tokenVersion = 0L;
 
     @Enumerated(EnumType.STRING)
      private Role role;
