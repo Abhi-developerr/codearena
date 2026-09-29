@@ -5,7 +5,10 @@ import com.codearena.codearena.dto.ProblemResponse;
 import com.codearena.codearena.service.ProblemService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.data.web.PageableDefault;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -127,9 +130,12 @@ public ProblemResponse getProblemById(
     )
 })
 @SecurityRequirement(name = "bearerAuth")
-public List<ProblemResponse> getAllProblems() {
+@Transactional
+public Page<ProblemResponse> getAllProblems(
+        @PageableDefault(size = 10)
+        Pageable pageable) {
 
-    return problemService.getAllProblems();
+    return problemService.getAllProblems(pageable);
 }
 
 @PutMapping("/{id}")

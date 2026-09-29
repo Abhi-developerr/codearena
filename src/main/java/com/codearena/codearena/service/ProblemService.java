@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 import com.codearena.codearena.exception.ProblemNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 public class ProblemService {
@@ -56,13 +58,12 @@ public class ProblemService {
             problem.getUpdatedAt()
     );
 }
+@Transactional
+public Page<ProblemResponse> getAllProblems(Pageable pageable) {
 
-public List<ProblemResponse> getAllProblems() {
-
-    return problemRepository.findAll()
-            .stream()
-            .map(this::toResponse)
-            .collect(Collectors.toList());
+    return problemRepository
+            .findAll(pageable)
+            .map(this::toResponse);
 }
 @Transactional
 public ProblemResponse updateProblem(
