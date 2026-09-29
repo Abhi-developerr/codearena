@@ -1,6 +1,6 @@
 package com.codearena.codearena.controller;
 
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +40,14 @@ import jakarta.validation.Valid;
     description = "Coding problem management APIs"
 )
 public class ProblemController {
+
+    private static final Set<String> ALLOWED_SORT_FIELDS =
+        Set.of(
+                "title",
+                "difficulty",
+                "createdAt",
+                "updatedAt"
+        );
 
     private final ProblemService problemService;
 
