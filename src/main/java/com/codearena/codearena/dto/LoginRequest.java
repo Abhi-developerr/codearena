@@ -1,16 +1,26 @@
 package com.codearena.codearena.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-
 public class LoginRequest {
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    private String email;
+   @Schema(
+        description = "Registered user email",
+        example = "abhishek@example.com"
+)
+@NotBlank(message = "Email is required")
+@Email(message = "Email must be valid")
+private String email;
 
-    @NotBlank(message = "Password is required")
-    private String password;
+
+@Schema(
+        description = "User password",
+        example = "StrongPass123",
+        writeOnly = true
+)
+@NotBlank(message = "Password is required")
+private String password;
 
     public LoginRequest() {
     }

@@ -1,9 +1,22 @@
 package com.codearena.codearena.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public class RefreshResponse {
 
-    private final String accessToken;
-    private final String refreshToken;
+    @Schema(
+        description = "New short-lived JWT access token",
+        example = "eyJhbGciOiJIUzI1NiJ9...",
+        writeOnly = true
+)
+private String accessToken;
+
+    @Schema(
+        description = "New refresh token generated through refresh token rotation",
+        example = "550e8400-e29b-41d4-a716-446655440000",
+        writeOnly = true
+)
+private String refreshToken;
 
     public RefreshResponse(
             String accessToken,
