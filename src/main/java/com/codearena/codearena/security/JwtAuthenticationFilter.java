@@ -49,9 +49,14 @@ public class JwtAuthenticationFilter
                 authHeader.substring(7);
 
         try {
+JwtClaims jwtClaims =
+        jwtService.extractJwtClaims(token);
 
-           String email =
-        jwtService.extractEmail(token);
+String email =
+        jwtClaims.getEmail();
+
+long tokenVersion =
+        jwtClaims.getTokenVersion();
 
 UserDetails userDetails =
         userDetailsService
@@ -60,10 +65,7 @@ UserDetails userDetails =
 CustomUserDetails customUserDetails =
         (CustomUserDetails) userDetails;
 
-Long tokenVersion =
-        jwtService.extractTokenVersion(token);
-
-Long currentVersion =
+long currentVersion =
         customUserDetails
                 .getUser()
                 .getTokenVersion();
@@ -71,7 +73,7 @@ Long currentVersion =
 if (jwtService.isTokenValid(
         token,
         userDetails)
-        && tokenVersion.equals(currentVersion)) {
+        && tokenVersion == currentVersion) {
 
     UsernamePasswordAuthenticationToken authentication =
             new UsernamePasswordAuthenticationToken(
