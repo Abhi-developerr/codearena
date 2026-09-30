@@ -22,6 +22,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.codearena.codearena.dto.ChangePasswordRequest;
 import com.codearena.codearena.dto.LoginRequest;
 import com.codearena.codearena.dto.UserRequest;
+import com.codearena.codearena.dto.UserResponse;
 import com.codearena.codearena.entity.Role;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.exception.EmailAlreadyExistsException;
@@ -58,6 +59,7 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
+
         userService = new UserService(
                 userRepository,
                 passwordEncoder,
@@ -69,122 +71,276 @@ class UserServiceTest {
 
     @Test
     void createUserNormalizesEmailAndHashesPassword() {
+
         UserRequest request = new UserRequest();
+
         request.setName("Abhi");
         request.setEmail("  ABHI@example.com ");
         request.setPassword("password123");
 
-        User savedUser = new User();
-        when(userRepository.existsByEmail("abhi@example.com")).thenReturn(false);
-        when(passwordEncoder.encode("password123")).thenReturn("hashed");
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        User savedUser = userWithId(
+                user("abhi@example.com"),
+                1L
+        );
 
-        assertEquals(savedUser, userService.createUser(request));
-        verify(userRepository).save(any(User.class));
+        when(userRepository.existsByEmail("abhi@example.com"))
+                .thenReturn(false);
+
+        when(passwordEncoder.encode("password123"))
+                .thenReturn("hashed");
+
+        when(userRepository.save(any(User.class)))
+                .thenReturn(savedUser);
+
+        UserResponse response =
+                userService.createUser(request);
+
+        assertEquals(
+                1L,
+                response.getId()
+        );
+
+        assertEquals(
+                "Abhi",
+                response.getName()
+        );
+
+        assertEquals(
+                "abhi@example.com",
+                response.getEmail()
+        );
+
+        verify(userRepository)
+                .save(any(User.class));
     }
 
     @Test
     void createUserRejectsDuplicateEmail() {
-        UserRequest request = new UserRequest();
+
+        UserRequest request =
+                new UserRequest();
+
         request.setEmail("user@example.com");
         request.setPassword("password123");
-        when(userRepository.existsByEmail("user@example.com")).thenReturn(true);
 
-        assertThrows(EmailAlreadyExistsException.class,
-                () -> userService.createUser(request));
+        when(userRepository.existsByEmail(
+                "user@example.com"
+        )).thenReturn(true);
+
+        assertThrows(
+                EmailAlreadyExistsException.class,
+                () -> userService.createUser(request)
+        );
     }
 
     @Test
     void loginReturnsAccessAndRefreshTokens() {
-        User user = user("user@example.com");
-        CustomUserDetails details = new CustomUserDetails(user);
-        GeneratedRefreshToken refreshToken = new GeneratedRefreshToken("refresh", null);
-        LoginRequest request = new LoginRequest();
+
+        User user =
+                user("user@example.com");
+
+        CustomUserDetails details =
+                new CustomUserDetails(user);
+
+        GeneratedRefreshToken refreshToken =
+                new GeneratedRefreshToken(
+                        "refresh",
+                        null
+                );
+
+        LoginRequest request =
+                new LoginRequest();
+
         request.setEmail(" USER@example.com ");
         request.setPassword("password123");
 
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenReturn(authentication);
-        when(authentication.getPrincipal()).thenReturn(details);
-        when(jwtService.generateToken(user)).thenReturn("access");
-        when(refreshTokenService.createRefreshToken(user)).thenReturn(refreshToken);
+        when(authenticationManager.authenticate(
+                any(UsernamePasswordAuthenticationToken.class)
+        )).thenReturn(authentication);
 
-        var response = userService.login(request);
+        when(authentication.getPrincipal())
+                .thenReturn(details);
 
-        assertEquals("access", response.getAccessToken());
-        assertEquals("refresh", response.getRefreshToken());
-        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        when(jwtService.generateToken(user))
+                .thenReturn("access");
+
+        when(refreshTokenService.createRefreshToken(user))
+                .thenReturn(refreshToken);
+
+        var response =
+                userService.login(request);
+
+        assertEquals(
+                "access",
+                response.getAccessToken()
+        );
+
+        assertEquals(
+                "refresh",
+                response.getRefreshToken()
+        );
+
+        verify(authenticationManager)
+                .authenticate(
+                        any(
+                                UsernamePasswordAuthenticationToken.class
+                        )
+                );
     }
 
     @Test
     void loginConvertsAuthenticationFailureToInvalidCredentials() {
-        LoginRequest request = new LoginRequest();
+
+        LoginRequest request =
+                new LoginRequest();
+
         request.setEmail("user@example.com");
         request.setPassword("wrong");
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("bad credentials"));
 
-        assertThrows(InvalidCredentialsException.class,
-                () -> userService.login(request));
+        when(authenticationManager.authenticate(
+                any(UsernamePasswordAuthenticationToken.class)
+        )).thenThrow(
+                new BadCredentialsException(
+                        "bad credentials"
+                )
+        );
+
+        assertThrows(
+                InvalidCredentialsException.class,
+                () -> userService.login(request)
+        );
     }
 
     @Test
     void changePasswordUpdatesHashVersionAndDeletesRefreshTokens() {
-        User user = user("user@example.com");
-        ChangePasswordRequest request = new ChangePasswordRequest();
+
+        User user =
+                user("user@example.com");
+
+        ChangePasswordRequest request =
+                new ChangePasswordRequest();
+
         request.setOldPassword("oldPassword");
         request.setNewPassword("newPassword");
-        when(userRepository.findById(1L)).thenReturn(Optional.of(userWithId(user, 1L)));
-        when(passwordEncoder.matches("oldPassword", "old-hash")).thenReturn(true);
-        when(passwordEncoder.encode("newPassword")).thenReturn("new-hash");
 
-        userService.changePassword(1L, request);
+        when(userRepository.findById(1L))
+                .thenReturn(
+                        Optional.of(
+                                userWithId(user, 1L)
+                        )
+                );
 
-        assertEquals("new-hash", user.getPassword());
-        assertEquals(1L, user.getTokenVersion());
-        verify(refreshTokenService).deleteByUserId(1L);
+        when(passwordEncoder.matches(
+                "oldPassword",
+                "old-hash"
+        )).thenReturn(true);
+
+        when(passwordEncoder.encode(
+                "newPassword"
+        )).thenReturn("new-hash");
+
+        userService.changePassword(
+                1L,
+                request
+        );
+
+        assertEquals(
+                "new-hash",
+                user.getPassword()
+        );
+
+        assertEquals(
+                1L,
+                user.getTokenVersion()
+        );
+
+        verify(refreshTokenService)
+                .deleteByUserId(1L);
     }
 
     @Test
     void changePasswordRejectsWrongOldPassword() {
-        User user = userWithId(user("user@example.com"), 1L);
+
+        User user =
+                userWithId(
+                        user("user@example.com"),
+                        1L
+                );
+
         user.setPassword("old-hash");
-        ChangePasswordRequest request = new ChangePasswordRequest();
+
+        ChangePasswordRequest request =
+                new ChangePasswordRequest();
+
         request.setOldPassword("wrong");
         request.setNewPassword("newPassword");
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("wrong", "old-hash")).thenReturn(false);
 
-        assertThrows(InvalidPasswordException.class,
-                () -> userService.changePassword(1L, request));
+        when(userRepository.findById(1L))
+                .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches(
+                "wrong",
+                "old-hash"
+        )).thenReturn(false);
+
+        assertThrows(
+                InvalidPasswordException.class,
+                () -> userService.changePassword(
+                        1L,
+                        request
+                )
+        );
     }
 
     @Test
     void changePasswordRejectsUnknownUser() {
-        ChangePasswordRequest request = new ChangePasswordRequest();
-        when(userRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class,
-                () -> userService.changePassword(99L, request));
+        ChangePasswordRequest request =
+                new ChangePasswordRequest();
+
+        when(userRepository.findById(99L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                UserNotFoundException.class,
+                () -> userService.changePassword(
+                        99L,
+                        request
+                )
+        );
     }
 
     private User user(String email) {
+
         User user = new User();
+
         user.setEmail(email);
         user.setName("User");
         user.setRole(Role.USER);
         user.setPassword("old-hash");
+
         return user;
     }
 
-    private User userWithId(User user, Long id) {
+    private User userWithId(
+            User user,
+            Long id
+    ) {
+
         try {
-            var field = User.class.getDeclaredField("id");
+
+            var field =
+                    User.class.getDeclaredField("id");
+
             field.setAccessible(true);
+
             field.set(user, id);
+
         } catch (ReflectiveOperationException exception) {
+
             throw new AssertionError(exception);
         }
+
         return user;
     }
 }

@@ -43,7 +43,10 @@ public class UserController {
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
 
-    public UserController(UserService userService, RefreshTokenService refreshTokenService) {
+    public UserController(
+            UserService userService,
+            RefreshTokenService refreshTokenService) {
+
         this.userService = userService;
         this.refreshTokenService = refreshTokenService;
     }
@@ -54,13 +57,23 @@ public class UserController {
             description = "Accessible only to authenticated users with the ADMIN role."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Admin access granted"),
-            @ApiResponse(responseCode = "401", description = "Authentication required"),
-            @ApiResponse(responseCode = "403", description = "Access denied - ADMIN role required")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Admin access granted"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied - ADMIN role required"
+            )
     })
     @PreAuthorize("hasRole('ADMIN')")
     @SecurityRequirement(name = "bearerAuth")
     public String adminOnly() {
+
         return "Welcome Admin!";
     }
 
@@ -75,13 +88,23 @@ public class UserController {
                     description = "User registered successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponse.class)
+                            schema = @Schema(
+                                    implementation = UserResponse.class
+                            )
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "Invalid request data"),
-            @ApiResponse(responseCode = "409", description = "Email already exists")
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request data"
+            ),
+            @ApiResponse(
+                    responseCode = "409",
+                    description = "Email already exists"
+            )
     })
-    public User createUser(@Valid @RequestBody UserRequest request) {
+    public UserResponse createUser(
+            @Valid @RequestBody UserRequest request) {
+
         return userService.createUser(request);
     }
 
@@ -96,14 +119,26 @@ public class UserController {
                     description = "Token refreshed successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = RefreshResponse.class)
+                            schema = @Schema(
+                                    implementation = RefreshResponse.class
+                            )
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "Refresh token is missing"),
-            @ApiResponse(responseCode = "401", description = "Invalid or expired refresh token")
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Refresh token is missing"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid or expired refresh token"
+            )
     })
-    public RefreshResponse refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
-        return refreshTokenService.refreshAccessToken(request.getRefreshToken());
+    public RefreshResponse refreshToken(
+            @Valid @RequestBody RefreshTokenRequest request) {
+
+        return refreshTokenService.refreshAccessToken(
+                request.getRefreshToken()
+        );
     }
 
     @PutMapping("/change-password")
@@ -112,16 +147,35 @@ public class UserController {
             description = "Changes the password of the currently authenticated user."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Password changed successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid request or old password is incorrect"),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Password changed successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request or old password is incorrect"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required"
+            )
     })
     @SecurityRequirement(name = "bearerAuth")
-    public String changePassword(@Valid @RequestBody ChangePasswordRequest request, Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Long userId = userDetails.getUser().getId();
+    public String changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication) {
 
-        userService.changePassword(userId, request);
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        Long userId =
+                userDetails.getUser().getId();
+
+        userService.changePassword(
+                userId,
+                request
+        );
+
         return "Password changed successfully";
     }
 
@@ -131,12 +185,26 @@ public class UserController {
             description = "Invalidates the supplied refresh token."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Logout successful"),
-            @ApiResponse(responseCode = "400", description = "Refresh token is missing")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Logout successful"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Refresh token is missing"
+            )
     })
-    public Map<String, String> logout(@Valid @RequestBody RefreshTokenRequest request) {
-        refreshTokenService.deleteByToken(request.getRefreshToken());
-        return Map.of("message", "Logged out successfully");
+    public Map<String, String> logout(
+            @Valid @RequestBody RefreshTokenRequest request) {
+
+        refreshTokenService.deleteByToken(
+                request.getRefreshToken()
+        );
+
+        return Map.of(
+                "message",
+                "Logged out successfully"
+        );
     }
 
     @PostMapping("/login")
@@ -150,13 +218,23 @@ public class UserController {
                     description = "Login successful",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = LoginResponse.class)
+                            schema = @Schema(
+                                    implementation = LoginResponse.class
+                            )
                     )
             ),
-            @ApiResponse(responseCode = "400", description = "Invalid request data"),
-            @ApiResponse(responseCode = "401", description = "Invalid email or password")
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request data"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Invalid email or password"
+            )
     })
-    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+    public LoginResponse login(
+            @Valid @RequestBody LoginRequest request) {
+
         return userService.login(request);
     }
 
@@ -171,16 +249,31 @@ public class UserController {
                     description = "Profile retrieved successfully",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = UserResponse.class)
+                            schema = @Schema(
+                                    implementation = UserResponse.class
+                            )
                     )
             ),
-            @ApiResponse(responseCode = "401", description = "Authentication required")
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication required"
+            )
     })
     @SecurityRequirement(name = "bearerAuth")
-    public UserResponse getProfile(Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        User user = userDetails.getUser();
+    public UserResponse getProfile(
+            Authentication authentication) {
 
-        return new UserResponse(user.getId(), user.getName(), user.getEmail());
+        CustomUserDetails userDetails =
+                (CustomUserDetails) authentication.getPrincipal();
+
+        User user =
+                userDetails.getUser();
+
+        return new UserResponse(
+                user.getId(),
+                user.getName(),
+                user.getEmail()
+        );
     }
 }
+
