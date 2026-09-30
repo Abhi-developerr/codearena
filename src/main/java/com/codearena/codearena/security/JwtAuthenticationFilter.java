@@ -19,6 +19,7 @@ public class JwtAuthenticationFilter
         extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+
     private final CustomUserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
@@ -26,7 +27,9 @@ public class JwtAuthenticationFilter
             CustomUserDetailsService userDetailsService) {
 
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+
+        this.userDetailsService =
+                userDetailsService;
     }
 
     @Override
@@ -42,7 +45,11 @@ public class JwtAuthenticationFilter
         if (authHeader == null ||
                 !authHeader.startsWith("Bearer ")) {
 
-            filterChain.doFilter(request, response);
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
 
@@ -50,50 +57,65 @@ public class JwtAuthenticationFilter
                 authHeader.substring(7);
 
         try {
-JwtClaims jwtClaims =
-        jwtService.extractJwtClaims(token);
 
-String email =
-        jwtClaims.getEmail();
+                       JwtClaims jwtClaims =
+                    jwtService.extractJwtClaims(token);
 
-long tokenVersion =
-        jwtClaims.getTokenVersion();
+            String email =
+                    jwtClaims.getEmail();
 
-UserDetails userDetails =
-        userDetailsService
-                .loadUserByUsername(email);
+            long tokenVersion =
+                    jwtClaims.getTokenVersion();
 
-CustomUserDetails customUserDetails =
-        (CustomUserDetails) userDetails;
+            UserDetails userDetails =
+                    userDetailsService
+                            .loadUserByUsername(email);
 
-long currentVersion =
-        customUserDetails
-                .getUser()
-                .getTokenVersion();
+            CustomUserDetails customUserDetails =
+                    (CustomUserDetails) userDetails;
 
-if (jwtService.isTokenValid(
-        email,
-        userDetails)
-        && tokenVersion == currentVersion) {
+            long currentVersion =
+                    customUserDetails
+                            .getUser()
+                            .getTokenVersion();
 
-    UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(
-                    userDetails,
-                    null,
-                    userDetails.getAuthorities()
-            );
+          
+            boolean emailMatches =
+                    email.equals(
+                            userDetails.getUsername()
+                    );
 
-    SecurityContextHolder
-            .getContext()
-            .setAuthentication(authentication);
-}            
+            boolean tokenVersionMatches =
+                    tokenVersion == currentVersion;
 
-        } catch (JwtException |
-       IllegalArgumentException exception) {
+            if (emailMatches &&
+                    tokenVersionMatches) {
 
+                        UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
+
+
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(
+                                authentication
+                        );
+            }
+
+        } catch (
+                JwtException |
+                IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
         }
 
-        filterChain.doFilter(request, response);
+
+        filterChain.doFilter(
+                request,
+                response
+        );
     }
-        }
+}

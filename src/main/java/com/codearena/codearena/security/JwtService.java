@@ -7,7 +7,6 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.codearena.codearena.entity.User;
@@ -34,27 +33,35 @@ public class JwtService {
         );
     }
 
-    public JwtClaims extractJwtClaims(String token) {
+    public JwtClaims extractJwtClaims(
+            String token) {
 
-    Claims claims =
-            extractAllClaims(token);
+        Claims claims =
+                extractAllClaims(token);
 
-    String email =
-            claims.getSubject();
+        String email =
+                claims.getSubject();
 
-    long tokenVersion =
-            claims.get(
-                    "tokenVersion",
-                    Long.class
+        Long tokenVersion =
+                claims.get(
+                        "tokenVersion",
+                        Long.class
+                );
+
+        if (email == null || tokenVersion == null) {
+            throw new IllegalArgumentException(
+                    "Required JWT claims are missing"
             );
+        }
 
-    return new JwtClaims(
-            email,
-            tokenVersion
-    );
-}
+        return new JwtClaims(
+                email,
+                tokenVersion
+        );
+    }
 
-    private Claims extractAllClaims(String token) {
+    private Claims extractAllClaims(
+            String token) {
 
         return Jwts.parser()
                 .verifyWith(getSigningKey())
@@ -65,15 +72,20 @@ public class JwtService {
 
     public String generateToken(User user) {
 
-        SecretKey key = getSigningKey();
+        SecretKey key =
+                getSigningKey();
 
         return Jwts.builder()
-                .subject(user.getEmail())
+                .subject(
+                        user.getEmail()
+                )
                 .claim(
                         "tokenVersion",
                         user.getTokenVersion()
                 )
-                .issuedAt(new Date())
+                .issuedAt(
+                        new Date()
+                )
                 .expiration(
                         new Date(
                                 System.currentTimeMillis()
@@ -84,7 +96,8 @@ public class JwtService {
                 .compact();
     }
 
-    public String extractEmail(String token) {
+    public String extractEmail(
+            String token) {
 
         Claims claims =
                 extractAllClaims(token);
@@ -92,30 +105,24 @@ public class JwtService {
         return claims.getSubject();
     }
 
-    public long extractTokenVersion(String token) {
+    public long extractTokenVersion(
+            String token) {
 
         Claims claims =
                 extractAllClaims(token);
 
-        return claims.get(
-                "tokenVersion",
-                Long.class
-        );
+        Long tokenVersion =
+                claims.get(
+                        "tokenVersion",
+                        Long.class
+                );
+
+        if (tokenVersion == null) {
+            throw new IllegalArgumentException(
+                    "Token version is missing"
+            );
+        }
+
+        return tokenVersion;
     }
-
-    public boolean isTokenValid(
-        String email,
-        UserDetails userDetails) {
-
-    if (email == null ||
-            email.isBlank()) {
-
-        return false;
-    }
-
-    return email.equals(
-            userDetails.getUsername()
-    );
-}
-
 }

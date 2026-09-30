@@ -1,7 +1,6 @@
 package com.codearena.codearena.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.lang.reflect.Field;
@@ -18,54 +17,122 @@ import io.jsonwebtoken.JwtException;
 class JwtServiceTest {
 
     private JwtService jwtService;
+
     private User user;
 
     @BeforeEach
     void setUp() throws Exception {
-        jwtService = new JwtService();
-        setField("secret", "01234567890123456789012345678901");
-        setField("accessTokenExpiration", Duration.ofMinutes(5));
+
+        jwtService =
+                new JwtService();
+
+        setField(
+                "secret",
+                "01234567890123456789012345678901"
+        );
+
+        setField(
+                "accessTokenExpiration",
+                Duration.ofMinutes(5)
+        );
+
         user = new User();
-        user.setEmail("user@example.com");
-        user.setRole(Role.USER);
+
+        user.setEmail(
+                "user@example.com"
+        );
+
+        user.setRole(
+                Role.USER
+        );
+
         user.setTokenVersion(3L);
     }
 
     @Test
     void generatedTokenContainsEmailAndTokenVersion() {
-        String token = jwtService.generateToken(user);
 
-        JwtClaims claims = jwtService.extractJwtClaims(token);
+        String token =
+                jwtService.generateToken(user);
 
-        assertEquals("user@example.com", claims.getEmail());
-        assertEquals(3L, claims.getTokenVersion());
+        JwtClaims claims =
+                jwtService.extractJwtClaims(token);
+
+        assertEquals(
+                "user@example.com",
+                claims.getEmail()
+        );
+
+        assertEquals(
+                3L,
+                claims.getTokenVersion()
+        );
     }
 
     @Test
-    void tokenValidityRequiresMatchingUsername() {
-        String token = jwtService.generateToken(user);
+    void extractEmailReturnsSubject() {
 
-        assertEquals(true, jwtService.isTokenValid(
-                jwtService.extractEmail(token),
-                new CustomUserDetails(user)
-        ));
-        assertFalse(jwtService.isTokenValid(
-                "other@example.com",
-                new CustomUserDetails(user)
-        ));
+        String token =
+                jwtService.generateToken(user);
+
+        assertEquals(
+                "user@example.com",
+                jwtService.extractEmail(token)
+        );
+    }
+
+    @Test
+    void extractTokenVersionReturnsVersion() {
+
+        String token =
+                jwtService.generateToken(user);
+
+        assertEquals(
+                3L,
+                jwtService.extractTokenVersion(token)
+        );
     }
 
     @Test
     void tamperedTokenIsRejected() {
-        String token = jwtService.generateToken(user);
 
-        assertThrows(JwtException.class,
-                () -> jwtService.extractJwtClaims(token + "tampered"));
+        String token =
+                jwtService.generateToken(user);
+
+        assertThrows(
+                JwtException.class,
+                () -> jwtService.extractJwtClaims(
+                        token + "tampered"
+                )
+        );
     }
 
-    private void setField(String name, Object value) throws Exception {
-        Field field = JwtService.class.getDeclaredField(name);
+    @Test
+    void malformedTokenIsRejected() {
+
+        assertThrows(
+                JwtException.class,
+                () -> jwtService.extractJwtClaims(
+                        "invalid-token"
+                )
+        );
+    }
+
+    private void setField(
+            String name,
+            Object value)
+            throws Exception {
+
+        Field field =
+                JwtService.class.getDeclaredField(
+                        name
+                );
+
         field.setAccessible(true);
-        field.set(jwtService, value);
+
+        field.set(
+                jwtService,
+                value
+        );
     }
 }
