@@ -1,15 +1,17 @@
-public interface ProblemRepository
-        extends JpaRepository<Problem, Long> {
+package com.codearena.codearena.repository;
 
-    Page<Problem> findByDifficulty(
-            Difficulty difficulty,
-            Pageable pageable
-    );
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-    Page<Problem> findByTitleContainingIgnoreCase(
-            String title,
-            Pageable pageable
-    );
+import com.codearena.codearena.entity.Difficulty;
+import com.codearena.codearena.entity.Problem;
+
+public interface ProblemRepository extends JpaRepository<Problem, Long> {
+
+    Page<Problem> findByDifficulty(Difficulty difficulty, Pageable pageable);
+
+    Page<Problem> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
     Page<Problem> findByTitleContainingIgnoreCaseAndDifficulty(
             String title,

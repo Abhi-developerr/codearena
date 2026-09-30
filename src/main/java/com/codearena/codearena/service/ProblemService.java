@@ -10,6 +10,7 @@ import com.codearena.codearena.dto.ProblemResponse;
 import com.codearena.codearena.entity.Difficulty;
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.exception.ProblemNotFoundException;
+import com.codearena.codearena.repository.ProblemRepository;
 
 @Service
 public class ProblemService {
@@ -40,11 +41,24 @@ public class ProblemService {
         return toResponse(problem);
     }
 
-    public Page<ProblemResponse> getAllProblems(Difficulty difficulty, Pageable pageable) {
+    public Page<ProblemResponse> getAllProblems(Difficulty difficulty, String search, Pageable pageable) {
+        String normalizedSearch = search == null ? "" : search.trim();
+
+        if (difficulty != null && !normalizedSearch.isEmpty()) {
+            return problemRepository.findByTitleContainingIgnoreCaseAndDifficulty(normalizedSearch, difficulty, pageable)
+                    .map(this::toResponse);
+        }
+
         if (difficulty != null) {
             return problemRepository.findByDifficulty(difficulty, pageable)
                     .map(this::toResponse);
         }
+
+        if (!normalizedSearch.isEmpty()) {
+            return problemRepository.findByTitleContainingIgnoreCase(normalizedSearch, pageable)
+                    .map(this::toResponse);
+        }
+
         return problemRepository.findAll(pageable)
                 .map(this::toResponse);
     }
@@ -86,4 +100,5 @@ public class ProblemService {
                 problem.getUpdatedAt()
         );
     }
+
 }

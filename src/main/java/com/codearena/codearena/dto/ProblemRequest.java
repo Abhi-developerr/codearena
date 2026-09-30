@@ -16,15 +16,31 @@ public class ProblemRequest {
     private String title;
 
     @NotBlank(message = "Description is required")
+    @Size(
+        max = 10000,
+        message = "Description must not exceed 10000 characters"
+    )
     private String description;
 
     @NotNull(message = "Difficulty is required")
     private Difficulty difficulty;
 
+    @Size(
+        max = 5000,
+        message = "Constraints must not exceed 5000 characters"
+    )
     private String constraints;
 
+    @Size(
+        max = 5000,
+        message = "Input format must not exceed 5000 characters"
+    )
     private String inputFormat;
 
+    @Size(
+        max = 5000,
+        message = "Output format must not exceed 5000 characters"
+    )
     private String outputFormat;
 
     public ProblemRequest() {

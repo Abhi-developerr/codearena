@@ -1,6 +1,6 @@
 package com.codearena.codearena.exception;
 
-import java.util.HashMap;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -8,9 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import com.codearena.codearena.exception.ProblemNotFoundException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -173,6 +174,22 @@ public ResponseEntity<ErrorResponse> handleTypeMismatch(
             new ErrorResponse(
                     400,
                     "Invalid request parameter",
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(errorResponse);
+}
+
+@ExceptionHandler(IllegalArgumentException.class)
+public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+        IllegalArgumentException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    400,
+                    exception.getMessage(),
                     null
             );
 
