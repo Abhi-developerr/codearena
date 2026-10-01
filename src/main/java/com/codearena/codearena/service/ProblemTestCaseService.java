@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProblemTestCaseService {
@@ -116,6 +117,14 @@ public ProblemTestCaseResponse updateTestCase(
         Long testCaseId,
         ProblemTestCaseRequest request) {
 
+    Problem problem =
+            problemRepository.findById(problemId)
+                    .orElseThrow(() ->
+                            new ProblemNotFoundException(
+                                    "Problem not found"
+                            )
+                    );
+
     ProblemTestCase testCase =
             problemTestCaseRepository.findById(testCaseId)
                     .orElseThrow(() ->
@@ -146,6 +155,36 @@ public ProblemTestCaseResponse updateTestCase(
             problemTestCaseRepository.save(testCase);
 
     return toResponse(updatedTestCase);
+}
+
+@Transactional
+public void deleteTestCase(
+        Long problemId,
+        Long testCaseId) {
+
+    Problem problem =
+            problemRepository.findById(problemId)
+                    .orElseThrow(() ->
+                            new ProblemNotFoundException(
+                                    "Problem not found"
+                            )
+                    );
+
+    ProblemTestCase testCase =
+            problemTestCaseRepository.findById(testCaseId)
+                    .orElseThrow(() ->
+                            new IllegalArgumentException(
+                                    "Test case not found"
+                            )
+                    );
+
+    if (!testCase.getProblem().getId().equals(problem.getId())) {
+        throw new IllegalArgumentException(
+                "Test case does not belong to this problem"
+        );
+    }
+
+    problemTestCaseRepository.delete(testCase);
 }
 
 }
