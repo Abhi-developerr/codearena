@@ -46,4 +46,27 @@ public ProblemTestCaseResponse createTestCase(
             @PathVariable Long problemId) {
         return problemTestCaseService.getTestCases(problemId);
     }
+
+    @PutMapping("/{testCaseId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProblemTestCaseResponse updateTestCase(
+            @PathVariable Long problemId,
+            @PathVariable Long testCaseId,
+            @Valid
+            @RequestBody
+            ProblemTestCaseRequest request) {
+        return problemTestCaseService.updateTestCase(
+                problemId,
+                testCaseId,
+                request
+        );
+    }
+
+    @GetMapping("/samples")
+public List<ProblemTestCaseResponse> getSampleTestCases(
+        @PathVariable Long problemId) {
+
+    return problemTestCaseService
+            .getSampleTestCases(problemId);
+}
 }

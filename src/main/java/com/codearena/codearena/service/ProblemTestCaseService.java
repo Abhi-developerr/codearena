@@ -9,7 +9,6 @@ import com.codearena.codearena.repository.ProblemRepository;
 import com.codearena.codearena.repository.ProblemTestCaseRepository;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -110,6 +109,43 @@ public List<ProblemTestCaseResponse> getSampleTestCases(
             .stream()
             .map(this::toResponse)
             .collect(Collectors.toList());
+}
+
+public ProblemTestCaseResponse updateTestCase(
+        Long problemId,
+        Long testCaseId,
+        ProblemTestCaseRequest request) {
+
+    ProblemTestCase testCase =
+            problemTestCaseRepository.findById(testCaseId)
+                    .orElseThrow(() ->
+                            new IllegalArgumentException(
+                                    "Test case not found"
+                            )
+                    );
+
+    if (!testCase.getProblem().getId().equals(problem.getId())) {
+        throw new IllegalArgumentException(
+                "Test case does not belong to this problem"
+        );
+    }
+
+    testCase.setInput(
+            request.getInput().trim()
+    );
+
+    testCase.setExpectedOutput(
+            request.getExpectedOutput().trim()
+    );
+
+    testCase.setHidden(
+            request.isHidden()
+    );
+
+    ProblemTestCase updatedTestCase =
+            problemTestCaseRepository.save(testCase);
+
+    return toResponse(updatedTestCase);
 }
 
 }
