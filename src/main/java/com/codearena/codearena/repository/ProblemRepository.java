@@ -7,11 +7,24 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.codearena.codearena.entity.Difficulty;
 import com.codearena.codearena.entity.Problem;
 
-public interface ProblemRepository extends JpaRepository<Problem, Long> {
+public interface ProblemRepository
+        extends JpaRepository<Problem, Long> {
 
-    Page<Problem> findByDifficulty(Difficulty difficulty, Pageable pageable);
+    boolean existsByTitle(String title);
 
-    Page<Problem> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+    Page<Problem> findByDifficulty(
+            Difficulty difficulty,
+            Pageable pageable
+    );
+
+    boolean existsByTitleAndIdNot(
+        String title,
+        Long id
+);
+    Page<Problem> findByTitleContainingIgnoreCase(
+            String title,
+            Pageable pageable
+    );
 
     Page<Problem> findByTitleContainingIgnoreCaseAndDifficulty(
             String title,

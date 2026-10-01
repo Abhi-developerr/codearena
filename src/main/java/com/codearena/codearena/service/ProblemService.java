@@ -10,6 +10,7 @@ import com.codearena.codearena.dto.ProblemResponse;
 import com.codearena.codearena.entity.Difficulty;
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.exception.ProblemNotFoundException;
+import com.codearena.codearena.exception.ProblemTitleAlreadyExistsException;
 import com.codearena.codearena.repository.ProblemRepository;
 
 @Service
@@ -29,7 +30,14 @@ public class ProblemService {
         problem.setConstraints(request.getConstraints());
         problem.setInputFormat(request.getInputFormat());
         problem.setOutputFormat(request.getOutputFormat());
+String title = request.getTitle().trim();
 
+if (problemRepository.existsByTitle(title)) {
+    throw new ProblemTitleAlreadyExistsException(
+            "Problem title already exists"
+    );
+}
+problem.setTitle(title);
         Problem savedProblem = problemRepository.save(problem);
         return toResponse(savedProblem);
     }
@@ -68,7 +76,14 @@ public class ProblemService {
         Problem problem = problemRepository.findById(id)
                 .orElseThrow(() -> new ProblemNotFoundException("Problem not found"));
 
-        problem.setTitle(request.getTitle());
+        String title = request.getTitle().trim();
+
+        if (problemRepository.existsByTitleAndIdNot(title, id)) {
+            throw new ProblemTitleAlreadyExistsException(
+                    "Problem title already exists"
+            );
+        }
+        problem.setTitle(title);
         problem.setDescription(request.getDescription());
         problem.setDifficulty(request.getDifficulty());
         problem.setConstraints(request.getConstraints());

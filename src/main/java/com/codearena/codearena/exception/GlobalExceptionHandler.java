@@ -197,4 +197,21 @@ public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             .status(HttpStatus.BAD_REQUEST)
             .body(errorResponse);
 }
+
+@ExceptionHandler(ProblemTitleAlreadyExistsException.class)
+public ResponseEntity<ErrorResponse>
+handleProblemTitleAlreadyExists(
+        ProblemTitleAlreadyExistsException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    409,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(errorResponse);
+}
 }
