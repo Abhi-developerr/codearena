@@ -1,13 +1,22 @@
 package com.codearena.codearena.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class ProblemTestCaseRequest {
 
     @NotBlank(message = "Input is required")
+    @Size(
+        max = 10000,
+        message = "Input must not exceed 10000 characters"
+    )
     private String input;
 
     @NotBlank(message = "Expected output is required")
+    @Size(
+        max = 10000,
+        message = "Expected output must not exceed 10000 characters"
+    )
     private String expectedOutput;
 
     private boolean hidden;

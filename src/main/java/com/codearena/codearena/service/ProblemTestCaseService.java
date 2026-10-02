@@ -16,8 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProblemTestCaseService {
 
-    private final ProblemTestCaseRepository
-            problemTestCaseRepository;
+    private final ProblemTestCaseRepository problemTestCaseRepository;
 
     private final ProblemRepository problemRepository;
 
@@ -25,19 +24,14 @@ public class ProblemTestCaseService {
             ProblemTestCaseRepository problemTestCaseRepository,
             ProblemRepository problemRepository) {
 
-        this.problemTestCaseRepository =
-                problemTestCaseRepository;
+        this.problemTestCaseRepository = problemTestCaseRepository;
 
-        this.problemRepository =
-                problemRepository;
+        this.problemRepository = problemRepository;
     }
 
-    public ProblemTestCaseResponse createTestCase(
-        Long problemId,
-        ProblemTestCaseRequest request) {
+    public ProblemTestCaseResponse createTestCase(Long problemId, ProblemTestCaseRequest request) {
 
-    Problem problem =
-            problemRepository.findById(problemId)
+    Problem problem = problemRepository.findById(problemId)
                     .orElseThrow(() ->
                             new ProblemNotFoundException(
                                     "Problem not found"
@@ -61,8 +55,7 @@ public class ProblemTestCaseService {
 
     testCase.setProblem(problem);
 
-    ProblemTestCase savedTestCase =
-            problemTestCaseRepository.save(testCase);
+    ProblemTestCase savedTestCase = problemTestCaseRepository.save(testCase);
 
     return toResponse(savedTestCase);
 }
