@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyExistsException.class)
@@ -197,21 +195,36 @@ public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
             .status(HttpStatus.BAD_REQUEST)
             .body(errorResponse);
 }
-
-@ExceptionHandler(ProblemTitleAlreadyExistsException.class)
-public ResponseEntity<ErrorResponse>
-handleProblemTitleAlreadyExists(
-        ProblemTitleAlreadyExistsException exception) {
+@ExceptionHandler(ProblemTestCaseNotFoundException.class)
+public ResponseEntity<ErrorResponse> handleProblemTestCaseNotFound(
+        ProblemTestCaseNotFoundException exception) {
 
     ErrorResponse errorResponse =
             new ErrorResponse(
-                    409,
+                    404,
                     exception.getMessage(),
                     null
             );
 
     return ResponseEntity
-            .status(HttpStatus.CONFLICT)
+            .status(HttpStatus.NOT_FOUND)
             .body(errorResponse);
 }
+
+@ExceptionHandler(ProblemTestCaseOwnershipException.class)
+public ResponseEntity<ErrorResponse> handleProblemTestCaseOwnership(
+        ProblemTestCaseOwnershipException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    403,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(errorResponse);
+}
+
 }
