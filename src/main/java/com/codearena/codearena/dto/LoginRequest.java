@@ -16,8 +16,7 @@ private String email;
 
 @Schema(
         description = "User password",
-        example = "StrongPass123",
-        writeOnly = true
+        example = "StrongPass123"
 )
 @NotBlank(message = "Password is required")
 private String password;

@@ -6,17 +6,15 @@ public class RefreshResponse {
 
     @Schema(
         description = "New short-lived JWT access token",
-        example = "eyJhbGciOiJIUzI1NiJ9...",
-        writeOnly = true
+        example = "eyJhbGciOiJIUzI1NiJ9..."
 )
-private String accessToken;
+private final String accessToken;
 
     @Schema(
         description = "New refresh token generated through refresh token rotation",
-        example = "550e8400-e29b-41d4-a716-446655440000",
-        writeOnly = true
+        example = "550e8400-e29b-41d4-a716-446655440000"
 )
-private String refreshToken;
+private final String refreshToken;
 
     public RefreshResponse(
             String accessToken,

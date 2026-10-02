@@ -8,22 +8,20 @@ public class ChangePasswordRequest {
 
 @Schema(
         description = "Current password of the authenticated user",
-        example = "OldPass123",
-        writeOnly = true
+        example = "OldPass123"
 )
 @NotBlank(message = "Old password is required")
 private String oldPassword;
 
-   @Schema(
+    @Schema(
         description = "New password for the authenticated user",
-        example = "NewStrongPass123",
-        writeOnly = true
-)
-@NotBlank(message = "New password is required")
-@Size(
+        example = "NewStrongPass123"
+    )
+    @NotBlank(message = "New password is required")
+    @Size(
         min = 8,
         message = "New password must contain at least 8 characters"
-)
+    )
 private String newPassword;
 
     public ChangePasswordRequest() {
