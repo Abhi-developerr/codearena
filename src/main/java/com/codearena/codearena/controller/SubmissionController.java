@@ -1,5 +1,6 @@
 package com.codearena.codearena.controller;
 
+import com.codearena.codearena.dto.SubmissionCodeResponse;
 import com.codearena.codearena.dto.SubmissionRequest;
 import com.codearena.codearena.dto.SubmissionResponse;
 import com.codearena.codearena.security.CustomUserDetails;
@@ -167,6 +168,43 @@ public SubmissionResponse getMySubmission(
             submissionId
     );
 }
+@GetMapping("/{submissionId}/code")
+@Operation(
+    summary = "Get submission source code",
+    description = "Returns source code of a submission belonging to the authenticated user"
+)
+@ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Source code retrieved successfully"
+    ),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Authentication required"
+    ),
+    @ApiResponse(
+        responseCode = "404",
+        description = "Submission not found"
+    )
+})
+@SecurityRequirement(name = "bearerAuth")
+public SubmissionCodeResponse getSubmissionCode(
+        @PathVariable Long submissionId,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    Long userId =
+            userDetails.getUser().getId();
+
+    return submissionService.getSubmissionCode(
+            userId,
+            submissionId
+    );
+}
+
+
 
 @GetMapping("/problems/{problemId}/submissions")
 @Operation(

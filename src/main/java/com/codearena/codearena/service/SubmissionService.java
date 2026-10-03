@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
+import com.codearena.codearena.entity.SubmissionVerdict;
 import com.codearena.codearena.entity.User;
 import com.codearena.codearena.exception.ProblemNotFoundException;
 import com.codearena.codearena.exception.UserNotFoundException;
@@ -222,6 +223,42 @@ public Page<SubmissionResponse> getMySubmissionsForProblem(
                     pageable
             )
             .map(this::toResponse);
+}
+
+@Transactional
+public void updateExecutionResult(
+        Long submissionId,
+        SubmissionStatus status,
+        SubmissionVerdict verdict,
+        Long executionTime,
+        Long memoryUsed) {
+
+    if (status != SubmissionStatus.COMPLETED) {
+        throw new IllegalArgumentException(
+                "Execution result must have COMPLETED status"
+        );
+    }
+
+    if (verdict == null) {
+        throw new IllegalArgumentException(
+                "Completed submission must have a verdict"
+        );
+    }
+
+    Submission submission =
+            submissionRepository.findById(submissionId)
+                    .orElseThrow(() ->
+                            new SubmissionNotFoundException(
+                                    "Submission not found"
+                            )
+                    );
+
+    submission.setStatus(status);
+    submission.setVerdict(verdict);
+    submission.setExecutionTime(executionTime);
+    submission.setMemoryUsed(memoryUsed);
+
+    submissionRepository.save(submission);
 }
 
 }
