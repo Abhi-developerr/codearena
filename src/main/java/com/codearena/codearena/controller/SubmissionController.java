@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
 import java.util.Set;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -172,7 +171,7 @@ public SubmissionResponse getMySubmission(
 @GetMapping("/problems/{problemId}/submissions")
 @Operation(
     summary = "Get my submissions for a problem",
-    description = "Returns submissions created by the authenticated user for the specified problem"
+    description = "Returns paginated submissions created by the authenticated user for the specified problem"
 )
 @ApiResponses({
     @ApiResponse(
@@ -189,9 +188,16 @@ public SubmissionResponse getMySubmission(
     )
 })
 @SecurityRequirement(name = "bearerAuth")
-public List<SubmissionResponse> getMySubmissionsForProblem(
+public Page<SubmissionResponse> getMySubmissionsForProblem(
         @PathVariable Long problemId,
-        Authentication authentication) {
+        Authentication authentication,
+
+        @PageableDefault(
+            size = 10,
+            sort = "createdAt",
+            direction = Sort.Direction.DESC
+        )
+        Pageable pageable) {
 
     CustomUserDetails userDetails =
             (CustomUserDetails) authentication.getPrincipal();
@@ -202,7 +208,8 @@ public List<SubmissionResponse> getMySubmissionsForProblem(
     return submissionService
             .getMySubmissionsForProblem(
                     userId,
-                    problemId
+                    problemId,
+                    pageable
             );
 }
 

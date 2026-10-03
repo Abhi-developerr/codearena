@@ -1,5 +1,6 @@
 package com.codearena.codearena.service;
 
+import com.codearena.codearena.dto.SubmissionCodeResponse;
 import com.codearena.codearena.dto.SubmissionRequest;
 import com.codearena.codearena.dto.SubmissionResponse;
 
@@ -180,6 +181,28 @@ public Page<SubmissionResponse> getMySubmissions(
                 .collect(Collectors.toList());
     }
     
+    public SubmissionCodeResponse getSubmissionCode(
+        Long userId,
+        Long submissionId) {
+
+    Submission submission =
+            submissionRepository
+                    .findByIdAndUserId(
+                            submissionId,
+                            userId
+                    )
+                    .orElseThrow(() ->
+                            new SubmissionNotFoundException(
+                                    "Submission not found"
+                            )
+                    );
+
+    return new SubmissionCodeResponse(
+            submission.getId(),
+            submission.getSourceCode()
+    );
+}
+
 public Page<SubmissionResponse> getMySubmissionsForProblem(
         Long userId,
         Long problemId,
