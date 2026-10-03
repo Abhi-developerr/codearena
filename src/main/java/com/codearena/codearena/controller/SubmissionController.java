@@ -77,7 +77,7 @@ public ResponseEntity<SubmissionResponse> createSubmission(
         Authentication authentication) {
 
     CustomUserDetails userDetails =
-            (CustomUserDetails) authentication.getPrincipal();
+                (CustomUserDetails) authentication.getPrincipal();
 
     Long userId =
             userDetails.getUser().getId();
@@ -119,8 +119,10 @@ public Page<SubmissionResponse> getMySubmissions(
         )
         Pageable pageable) {
 
+    validateSort(pageable);
+
     CustomUserDetails userDetails =
-            (CustomUserDetails) authentication.getPrincipal();
+        (CustomUserDetails) authentication.getPrincipal();
 
     Long userId =
             userDetails.getUser().getId();

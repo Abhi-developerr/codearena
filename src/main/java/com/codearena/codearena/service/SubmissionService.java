@@ -152,4 +152,53 @@ public Page<SubmissionResponse> getMySubmissions(
             .map(this::toResponse);
 }
 
+    public List<SubmissionResponse> getMySubmissionsForProblem(
+            Long userId,
+            Long problemId) {
+
+        userRepository.findById(userId)
+                .orElseThrow(() ->
+                        new UserNotFoundException(
+                                "User not found"
+                        )
+                );
+
+        problemRepository.findById(problemId)
+                .orElseThrow(() ->
+                        new ProblemNotFoundException(
+                                "Problem not found"
+                        )
+                );
+
+        return submissionRepository
+                .findByUserIdAndProblemIdOrderByCreatedAtDesc(
+                        userId,
+                        problemId
+                )
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+    
+public Page<SubmissionResponse> getMySubmissionsForProblem(
+        Long userId,
+        Long problemId,
+        Pageable pageable) {
+
+    problemRepository.findById(problemId)
+            .orElseThrow(() ->
+                    new ProblemNotFoundException(
+                            "Problem not found"
+                    )
+            );
+
+    return submissionRepository
+            .findByUserIdAndProblemId(
+                    userId,
+                    problemId,
+                    pageable
+            )
+            .map(this::toResponse);
+}
+
 }

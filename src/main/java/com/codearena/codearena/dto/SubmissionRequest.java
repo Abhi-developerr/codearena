@@ -18,11 +18,6 @@ public class SubmissionRequest {
         max = 50000,
         message = "Source code must not exceed 50000 characters"
     )
-    @NotBlank(message = "Source code is required")
-@Size(
-    max = 50000,
-    message = "Source code must not exceed 50000 characters"
-)
 private String sourceCode;
 
     public SubmissionRequest() {
