@@ -213,7 +213,7 @@ public ResponseEntity<Void> deleteTestCase(
 })
 @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/samples")
-public List<ProblemTestCaseResponse> getSampleTestCases(
+public List<ProblemTestCasePublicResponse> getSampleTestCases(
         @PathVariable Long problemId) {
 
     return problemTestCaseService

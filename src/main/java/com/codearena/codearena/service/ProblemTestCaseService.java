@@ -1,5 +1,6 @@
 package com.codearena.codearena.service;
 
+import com.codearena.codearena.dto.ProblemTestCasePublicResponse;
 import com.codearena.codearena.dto.ProblemTestCaseRequest;
 import com.codearena.codearena.dto.ProblemTestCaseResponse;
 import com.codearena.codearena.entity.Problem;
@@ -60,19 +61,19 @@ public class ProblemTestCaseService {
 
     ProblemTestCase savedTestCase = problemTestCaseRepository.save(testCase);
 
-    return toResponse(savedTestCase);
+    return toAdminResponse(savedTestCase);
 }
 
-    private ProblemTestCaseResponse toResponse(
-            ProblemTestCase testCase) {
+    private ProblemTestCaseResponse toAdminResponse(
+        ProblemTestCase testCase) {
 
-        return new ProblemTestCaseResponse(
-                testCase.getId(),
-                testCase.getInput(),
-                testCase.getExpectedOutput(),
-                testCase.isHidden()
-        );
-    }
+    return new ProblemTestCaseResponse(
+            testCase.getId(),
+            testCase.getInput(),
+            testCase.getExpectedOutput(),
+            testCase.isHidden()
+    );
+}
 
     public List<ProblemTestCaseResponse> getTestCases(
         Long problemId) {
@@ -87,11 +88,11 @@ public class ProblemTestCaseService {
     return problemTestCaseRepository
             .findByProblemId(problemId)
             .stream()
-            .map(this::toResponse)
+            .map(this::toAdminResponse)
             .collect(Collectors.toList());
 }
 
-public List<ProblemTestCaseResponse> getSampleTestCases(
+public List<ProblemTestCasePublicResponse> getSampleTestCases(
         Long problemId) {
 
     problemRepository.findById(problemId)
@@ -104,7 +105,7 @@ public List<ProblemTestCaseResponse> getSampleTestCases(
     return problemTestCaseRepository
             .findByProblemIdAndHiddenFalse(problemId)
             .stream()
-            .map(this::toResponse)
+            .map(this::toPublicResponse)
             .collect(Collectors.toList());
 }
 
@@ -146,7 +147,7 @@ public ProblemTestCaseResponse updateTestCase(
     ProblemTestCase updatedTestCase =
             problemTestCaseRepository.save(testCase);
 
-    return toResponse(updatedTestCase);
+    return toAdminResponse(updatedTestCase);
 }
 
 @Transactional
@@ -208,6 +209,16 @@ private ProblemTestCase findTestCaseForProblem(
     }
 
     return testCase;
+}
+
+private ProblemTestCasePublicResponse toPublicResponse(
+        ProblemTestCase testCase) {
+
+    return new ProblemTestCasePublicResponse(
+            testCase.getId(),
+            testCase.getInput(),
+            testCase.getExpectedOutput()
+    );
 }
 
 }
