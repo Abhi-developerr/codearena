@@ -132,6 +132,40 @@ public ResponseEntity<ErrorResponse> handleGenericException(
             .body(error);
 }
 
+@ExceptionHandler(ProblemTestCaseNotFoundException.class)
+public ResponseEntity<ErrorResponse>
+handleProblemTestCaseNotFound(
+        ProblemTestCaseNotFoundException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    404,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(errorResponse);
+}
+
+@ExceptionHandler(ProblemTestCaseOwnershipException.class)
+public ResponseEntity<ErrorResponse>
+handleProblemTestCaseOwnership(
+        ProblemTestCaseOwnershipException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    404,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(errorResponse);
+}
+
 @ExceptionHandler(InvalidCredentialsException.class)
 public ResponseEntity<ErrorResponse> handleInvalidCredentials(
         InvalidCredentialsException exception) {

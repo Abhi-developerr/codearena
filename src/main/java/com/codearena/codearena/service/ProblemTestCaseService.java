@@ -4,6 +4,8 @@ import com.codearena.codearena.dto.ProblemTestCaseRequest;
 import com.codearena.codearena.dto.ProblemTestCaseResponse;
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.entity.ProblemTestCase;
+import com.codearena.codearena.exception.ProblemTestCaseNotFoundException;
+import com.codearena.codearena.exception.ProblemTestCaseOwnershipException;
 import com.codearena.codearena.exception.ProblemNotFoundException;
 import com.codearena.codearena.repository.ProblemRepository;
 import com.codearena.codearena.repository.ProblemTestCaseRepository;
@@ -29,6 +31,7 @@ public class ProblemTestCaseService {
         this.problemRepository = problemRepository;
     }
 
+    @Transactional
     public ProblemTestCaseResponse createTestCase(Long problemId, ProblemTestCaseRequest request) {
 
     Problem problem = problemRepository.findById(problemId)
@@ -119,12 +122,8 @@ public ProblemTestCaseResponse updateTestCase(
                     );
 
     ProblemTestCase testCase =
-            problemTestCaseRepository.findById(testCaseId)
-                    .orElseThrow(() ->
-                            new IllegalArgumentException(
-                                    "Test case not found"
-                            )
-                    );
+            findTestCaseForProblem(problemId, testCaseId);
+
 
     if (!testCase.getProblem().getId().equals(problem.getId())) {
         throw new IllegalArgumentException(
@@ -178,6 +177,37 @@ public void deleteTestCase(
     }
 
     problemTestCaseRepository.delete(testCase);
+}
+
+private ProblemTestCase findTestCaseForProblem(
+        Long problemId,
+        Long testCaseId) {
+
+    Problem problem =
+            problemRepository.findById(problemId)
+                    .orElseThrow(() ->
+                            new ProblemNotFoundException(
+                                    "Problem not found"
+                            )
+                    );
+
+    ProblemTestCase testCase =
+            problemTestCaseRepository.findById(testCaseId)
+                    .orElseThrow(() ->
+                            new ProblemTestCaseNotFoundException(
+                                    "Test case not found"
+                            )
+                    );
+
+    if (!testCase.getProblem().getId()
+            .equals(problem.getId())) {
+
+        throw new ProblemTestCaseOwnershipException(
+                "Test case does not belong to this problem"
+        );
+    }
+
+    return testCase;
 }
 
 }
