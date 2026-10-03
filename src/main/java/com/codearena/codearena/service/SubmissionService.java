@@ -4,9 +4,6 @@ import com.codearena.codearena.dto.SubmissionCodeResponse;
 import com.codearena.codearena.dto.SubmissionRequest;
 import com.codearena.codearena.dto.SubmissionResponse;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
@@ -74,7 +71,7 @@ public class SubmissionService {
     );
 
     submission.setSourceCode(
-            request.getSourceCode().trim()
+            request.getSourceCode()
     );
 
     submission.setStatus(
@@ -102,23 +99,7 @@ private SubmissionResponse toResponse(
             submission.getUpdatedAt()
     );
 }
-public List<SubmissionResponse> getMySubmissions(
-        Long userId) {
-
-    userRepository.findById(userId)
-            .orElseThrow(() ->
-                    new UserNotFoundException(
-                            "User not found"
-                    )
-            );
-
-    return submissionRepository
-            .findByUserIdOrderByCreatedAtDesc(userId)
-            .stream()
-            .map(this::toResponse)
-            .collect(Collectors.toList());
-}
-
+@Transactional(readOnly = true)
 public SubmissionResponse getMySubmission(
         Long userId,
         Long submissionId) {
@@ -138,6 +119,7 @@ public SubmissionResponse getMySubmission(
     return toResponse(submission);
 }
 
+@Transactional(readOnly = true)
 public Page<SubmissionResponse> getMySubmissions(
         Long userId,
         Pageable pageable) {
@@ -154,34 +136,7 @@ public Page<SubmissionResponse> getMySubmissions(
             .map(this::toResponse);
 }
 
-    public List<SubmissionResponse> getMySubmissionsForProblem(
-            Long userId,
-            Long problemId) {
-
-        userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new UserNotFoundException(
-                                "User not found"
-                        )
-                );
-
-        problemRepository.findById(problemId)
-                .orElseThrow(() ->
-                        new ProblemNotFoundException(
-                                "Problem not found"
-                        )
-                );
-
-        return submissionRepository
-                .findByUserIdAndProblemIdOrderByCreatedAtDesc(
-                        userId,
-                        problemId
-                )
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-    
+    @Transactional(readOnly = true)
     public SubmissionCodeResponse getSubmissionCode(
         Long userId,
         Long submissionId) {
@@ -204,10 +159,18 @@ public Page<SubmissionResponse> getMySubmissions(
     );
 }
 
+@Transactional(readOnly = true)
 public Page<SubmissionResponse> getMySubmissionsForProblem(
         Long userId,
         Long problemId,
         Pageable pageable) {
+
+    userRepository.findById(userId)
+            .orElseThrow(() ->
+                    new UserNotFoundException(
+                            "User not found"
+                    )
+            );
 
     problemRepository.findById(problemId)
             .orElseThrow(() ->
@@ -244,6 +207,46 @@ public void updateExecutionResult(
                 "Completed submission must have a verdict"
         );
     }
+if (executionTime == null || executionTime < 0) {
+    throw new IllegalArgumentException(
+            "Execution time must be zero or greater"
+    );
+}
+
+if (memoryUsed == null || memoryUsed < 0) {
+    throw new IllegalArgumentException(
+            "Memory used must be zero or greater"
+    );
+}
+   Submission submission =
+        submissionRepository.findById(submissionId)
+                .orElseThrow(() ->
+                        new SubmissionNotFoundException(
+                                "Submission not found"
+                        )
+                );
+
+if (submission.getStatus()
+        != SubmissionStatus.RUNNING) {
+
+    throw new IllegalArgumentException(
+            "Only running submissions can be completed"
+    );
+}
+
+submission.setStatus(
+        SubmissionStatus.COMPLETED
+);
+
+submission.setVerdict(verdict);
+submission.setExecutionTime(executionTime);
+submission.setMemoryUsed(memoryUsed);
+
+submissionRepository.save(submission);
+}
+
+@Transactional
+public void markAsRunning(Long submissionId) {
 
     Submission submission =
             submissionRepository.findById(submissionId)
@@ -253,12 +256,27 @@ public void updateExecutionResult(
                             )
                     );
 
-    submission.setStatus(status);
-    submission.setVerdict(verdict);
-    submission.setExecutionTime(executionTime);
-    submission.setMemoryUsed(memoryUsed);
+    if (submission.getStatus()
+            != SubmissionStatus.QUEUED) {
+
+        throw new IllegalArgumentException(
+                "Only queued submissions can be marked as running"
+        );
+    }
+
+    submission.setStatus(
+            SubmissionStatus.RUNNING
+    );
 
     submissionRepository.save(submission);
+}
+
+public Page<SubmissionResponse> getAllSubmissions(
+        Pageable pageable) {
+
+    return submissionRepository
+            .findAll(pageable)
+            .map(this::toResponse);
 }
 
 }

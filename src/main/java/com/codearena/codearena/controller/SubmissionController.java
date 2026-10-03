@@ -237,6 +237,8 @@ public Page<SubmissionResponse> getMySubmissionsForProblem(
         )
         Pageable pageable) {
 
+    validateSort(pageable);
+
     CustomUserDetails userDetails =
             (CustomUserDetails) authentication.getPrincipal();
 
