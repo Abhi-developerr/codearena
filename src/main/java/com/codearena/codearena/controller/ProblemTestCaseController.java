@@ -1,6 +1,7 @@
 package com.codearena.codearena.controller;
 
 import com.codearena.codearena.dto.ProblemTestCaseRequest;
+import com.codearena.codearena.dto.ProblemTestCasePublicResponse;
 import com.codearena.codearena.dto.ProblemTestCaseResponse;
 import com.codearena.codearena.service.ProblemTestCaseService;
 

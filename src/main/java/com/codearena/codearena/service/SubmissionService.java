@@ -32,7 +32,7 @@ public class SubmissionService {
     }
 
     @Transactional
-public SubmissionResponse createSubmission(
+    public SubmissionResponse createSubmission(
         Long userId,
         SubmissionRequest request) {
 
