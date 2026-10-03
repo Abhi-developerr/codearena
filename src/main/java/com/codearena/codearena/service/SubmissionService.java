@@ -2,8 +2,10 @@ package com.codearena.codearena.service;
 
 import com.codearena.codearena.dto.SubmissionRequest;
 import com.codearena.codearena.dto.SubmissionResponse;
+
 import java.util.List;
 import java.util.stream.Collectors;
+
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
@@ -13,9 +15,13 @@ import com.codearena.codearena.exception.UserNotFoundException;
 import com.codearena.codearena.repository.ProblemRepository;
 import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.codearena.codearena.exception.SubmissionNotFoundException;
 
 @Service
 public class SubmissionService {
@@ -128,6 +134,22 @@ public SubmissionResponse getMySubmission(
                     );
 
     return toResponse(submission);
+}
+
+public Page<SubmissionResponse> getMySubmissions(
+        Long userId,
+        Pageable pageable) {
+
+    userRepository.findById(userId)
+            .orElseThrow(() ->
+                    new UserNotFoundException(
+                            "User not found"
+                    )
+            );
+
+    return submissionRepository
+            .findByUserId(userId, pageable)
+            .map(this::toResponse);
 }
 
 }

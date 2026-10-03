@@ -12,6 +12,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Set;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +38,15 @@ public class SubmissionController {
 
         this.submissionService = submissionService;
     }
+
+    private static final Set<String> ALLOWED_SORT_FIELDS =
+        Set.of(
+                "createdAt",
+                "updatedAt",
+                "status",
+                "verdict",
+                "language"
+        );
 
     @Operation(
     summary = "Create a submission",
@@ -82,7 +96,7 @@ public ResponseEntity<SubmissionResponse> createSubmission(
 @GetMapping
 @Operation(
     summary = "Get my submissions",
-    description = "Returns submissions created by the authenticated user"
+    description = "Returns paginated submissions created by the authenticated user"
 )
 @ApiResponses({
     @ApiResponse(
@@ -95,8 +109,15 @@ public ResponseEntity<SubmissionResponse> createSubmission(
     )
 })
 @SecurityRequirement(name = "bearerAuth")
-public List<SubmissionResponse> getMySubmissions(
-        Authentication authentication) {
+public Page<SubmissionResponse> getMySubmissions(
+        Authentication authentication,
+
+        @PageableDefault(
+            size = 10,
+            sort = "createdAt",
+            direction = Sort.Direction.DESC
+        )
+        Pageable pageable) {
 
     CustomUserDetails userDetails =
             (CustomUserDetails) authentication.getPrincipal();
@@ -105,7 +126,8 @@ public List<SubmissionResponse> getMySubmissions(
             userDetails.getUser().getId();
 
     return submissionService.getMySubmissions(
-            userId
+            userId,
+            pageable
     );
 }
 
@@ -143,6 +165,58 @@ public SubmissionResponse getMySubmission(
             userId,
             submissionId
     );
+}
+
+@GetMapping("/problems/{problemId}/submissions")
+@Operation(
+    summary = "Get my submissions for a problem",
+    description = "Returns submissions created by the authenticated user for the specified problem"
+)
+@ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Submissions retrieved successfully"
+    ),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Authentication required"
+    ),
+    @ApiResponse(
+        responseCode = "404",
+        description = "Problem not found"
+    )
+})
+@SecurityRequirement(name = "bearerAuth")
+public List<SubmissionResponse> getMySubmissionsForProblem(
+        @PathVariable Long problemId,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    Long userId =
+            userDetails.getUser().getId();
+
+    return submissionService
+            .getMySubmissionsForProblem(
+                    userId,
+                    problemId
+            );
+}
+
+private void validateSort(Pageable pageable) {
+
+    pageable.getSort().forEach(order -> {
+
+        if (!ALLOWED_SORT_FIELDS.contains(
+                order.getProperty())) {
+
+            throw new IllegalArgumentException(
+                    "Invalid sort field: "
+                    + order.getProperty()
+            );
+        }
+    });
 }
 
 }
