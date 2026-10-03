@@ -109,4 +109,40 @@ public List<SubmissionResponse> getMySubmissions(
     );
 }
 
+@GetMapping("/{submissionId}")
+@Operation(
+    summary = "Get my submission",
+    description = "Returns a submission belonging to the authenticated user"
+)
+@ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Submission retrieved successfully"
+    ),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Authentication required"
+    ),
+    @ApiResponse(
+        responseCode = "404",
+        description = "Submission not found"
+    )
+})
+@SecurityRequirement(name = "bearerAuth")
+public SubmissionResponse getMySubmission(
+        @PathVariable Long submissionId,
+        Authentication authentication) {
+
+    CustomUserDetails userDetails =
+            (CustomUserDetails) authentication.getPrincipal();
+
+    Long userId =
+            userDetails.getUser().getId();
+
+    return submissionService.getMySubmission(
+            userId,
+            submissionId
+    );
+}
+
 }

@@ -111,4 +111,23 @@ public List<SubmissionResponse> getMySubmissions(
             .collect(Collectors.toList());
 }
 
+public SubmissionResponse getMySubmission(
+        Long userId,
+        Long submissionId) {
+
+    Submission submission =
+            submissionRepository
+                    .findByIdAndUserId(
+                            submissionId,
+                            userId
+                    )
+                    .orElseThrow(() ->
+                            new SubmissionNotFoundException(
+                                    "Submission not found"
+                            )
+                    );
+
+    return toResponse(submission);
+}
+
 }

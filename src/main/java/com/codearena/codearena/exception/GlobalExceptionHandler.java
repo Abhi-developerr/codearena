@@ -227,4 +227,20 @@ public ResponseEntity<ErrorResponse> handleProblemTestCaseOwnership(
             .body(errorResponse);
 }
 
+@ExceptionHandler(SubmissionNotFoundException.class)
+public ResponseEntity<ErrorResponse> handleSubmissionNotFoundException(
+        SubmissionNotFoundException exception) {
+
+    ErrorResponse errorResponse =
+            new ErrorResponse(
+                    404,
+                    exception.getMessage(),
+                    null
+            );
+
+    return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(errorResponse);
+}
+
 }
