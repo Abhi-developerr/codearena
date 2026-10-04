@@ -93,6 +93,42 @@ public ResponseEntity<SubmissionResponse> createSubmission(
             .body(response);
 }
 
+@GetMapping("/admin/submissions")
+@PreAuthorize("hasRole('ADMIN')")
+@Operation(
+    summary = "Get all submissions",
+    description = "Returns paginated submissions from all users. Admin access only."
+)
+@ApiResponses({
+    @ApiResponse(
+        responseCode = "200",
+        description = "Submissions retrieved successfully"
+    ),
+    @ApiResponse(
+        responseCode = "401",
+        description = "Authentication required"
+    ),
+    @ApiResponse(
+        responseCode = "403",
+        description = "Admin access required"
+    )
+})
+@SecurityRequirement(name = "bearerAuth")
+public Page<SubmissionResponse> getAllSubmissions(
+        @PageableDefault(
+            size = 10,
+            sort = "createdAt",
+            direction = Sort.Direction.DESC
+        )
+        Pageable pageable) {
+
+    validateSort(pageable);
+
+    return submissionService.getAllSubmissions(
+            pageable
+    );
+}
+
 @GetMapping
 @Operation(
     summary = "Get my submissions",
