@@ -9,6 +9,7 @@ import com.codearena.codearena.entity.SubmissionVerdict;
 import com.codearena.codearena.model.ExecutionResult;
 import java.util.List;
 import com.codearena.codearena.entity.Submission;
+import com.codearena.codearena.entity.SubmissionStatus;
 import com.codearena.codearena.entity.ProblemTestCase;
 import com.codearena.codearena.exception.SubmissionNotFoundException;
 import com.codearena.codearena.model.ExecutionRequest;
@@ -37,6 +38,21 @@ public class ExecutionService {
         this.submissionService = submissionService;
     }
 
+    private long calculateTotalExecutionTime(
+        List<TestCaseExecutionResult> results) {
+
+    long totalTime = 0L;
+
+    for (TestCaseExecutionResult result : results) {
+
+        if (result.getExecutionTime() != null) {
+            totalTime += result.getExecutionTime();
+        }
+    }
+
+    return totalTime;
+}
+
     public ExecutionResult execute(
         ExecutionRequest request,
         List<ProblemTestCase> testCases) {
@@ -49,8 +65,8 @@ public class ExecutionService {
 
     return new ExecutionResult(
             verdict,
-            null,
-            null,
+            calculateTotalExecutionTime(results),
+            calculateMaxMemoryUsed(results),
             null,
             results
     );
@@ -100,6 +116,10 @@ public List<TestCaseExecutionResult> runAllTestCases(
     return results;
 }
 
+private List<ProblemTestCase> getTestCases(Long problemId) {
+    return problemTestCaseRepository.findByProblemId(problemId);
+}
+
 private SubmissionVerdict determineVerdict(
         List<TestCaseExecutionResult> results) {
 
@@ -137,7 +157,35 @@ public ExecutionResult executeSubmission(Long submissionId) {
     List<ProblemTestCase> testCases =
             getTestCases(submission.getProblem().getId());
 
-    return execute(request, testCases);
+    ExecutionResult result = execute(request, testCases);
+
+    submissionService.updateExecutionResult(
+            submissionId,
+            SubmissionStatus.COMPLETED,
+            result.getVerdict(),
+            result.getExecutionTime(),
+            result.getMemoryUsed()
+    );
+
+    return result;
+}
+
+private long calculateMaxMemoryUsed(
+        List<TestCaseExecutionResult> results) {
+
+    long maxMemory = 0L;
+
+    for (TestCaseExecutionResult result : results) {
+
+        if (result.getMemoryUsed() != null) {
+            maxMemory = Math.max(
+                    maxMemory,
+                    result.getMemoryUsed()
+            );
+        }
+    }
+
+    return maxMemory;
 }
 
 }
