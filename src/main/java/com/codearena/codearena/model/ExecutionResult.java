@@ -1,6 +1,7 @@
 package com.codearena.codearena.model;
 
 import com.codearena.codearena.entity.SubmissionVerdict;
+import java.util.List;
 
 public class ExecutionResult {
 
@@ -12,6 +13,8 @@ public class ExecutionResult {
 
     private String errorMessage;
 
+    private List<TestCaseExecutionResult> testCaseResults;
+
     public ExecutionResult() {
     }
 
@@ -19,12 +22,14 @@ public class ExecutionResult {
             SubmissionVerdict verdict,
             Long executionTime,
             Long memoryUsed,
-            String errorMessage) {
+            String errorMessage,
+            List<TestCaseExecutionResult> testCaseResults) {
 
         this.verdict = verdict;
         this.executionTime = executionTime;
         this.memoryUsed = memoryUsed;
         this.errorMessage = errorMessage;
+        this.testCaseResults = testCaseResults;
     }
 
     public SubmissionVerdict getVerdict() {
@@ -57,5 +62,13 @@ public class ExecutionResult {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    public List<TestCaseExecutionResult> getTestCaseResults() {
+        return testCaseResults;
+    }
+
+    public void setTestCaseResults(List<TestCaseExecutionResult> testCaseResults) {
+        this.testCaseResults = testCaseResults;
     }
 }
