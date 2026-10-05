@@ -14,6 +14,8 @@ public class TestCaseExecutionResult {
 
     private String errorMessage;
 
+    private SandboxErrorType errorType;
+
     public TestCaseExecutionResult() {
     }
 
@@ -23,7 +25,8 @@ public class TestCaseExecutionResult {
             Long executionTime,
             Long memoryUsed,
             String actualOutput,
-            String errorMessage) {
+            String errorMessage,
+            SandboxErrorType errorType) {
 
         this.testCaseId = testCaseId;
         this.passed = passed;
@@ -31,6 +34,7 @@ public class TestCaseExecutionResult {
         this.memoryUsed = memoryUsed;
         this.actualOutput = actualOutput;
         this.errorMessage = errorMessage;
+        this.errorType = errorType;
     }
 
     public Long getTestCaseId() {
@@ -79,5 +83,13 @@ public class TestCaseExecutionResult {
 
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    public SandboxErrorType getErrorType() {
+        return errorType;
+    }
+
+    public void setErrorType(SandboxErrorType errorType) {
+        this.errorType = errorType;
     }
 }

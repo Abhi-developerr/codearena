@@ -7,6 +7,8 @@ import com.codearena.codearena.service.SubmissionService;
 import java.util.ArrayList;
 import com.codearena.codearena.entity.SubmissionVerdict;
 import com.codearena.codearena.model.ExecutionResult;
+import com.codearena.codearena.model.SandboxErrorType;
+
 import java.util.List;
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
@@ -128,6 +130,24 @@ private SubmissionVerdict determineVerdict(
     }
 
     for (TestCaseExecutionResult result : results) {
+
+        SandboxErrorType errorType = result.getErrorType();
+
+        if (errorType == SandboxErrorType.COMPILATION_ERROR) {
+            return SubmissionVerdict.COMPILATION_ERROR;
+        }
+
+        if (errorType == SandboxErrorType.RUNTIME_ERROR) {
+            return SubmissionVerdict.RUNTIME_ERROR;
+        }
+
+        if (errorType == SandboxErrorType.TIME_LIMIT_EXCEEDED) {
+            return SubmissionVerdict.TIME_LIMIT_EXCEEDED;
+        }
+
+        if (errorType == SandboxErrorType.MEMORY_LIMIT_EXCEEDED) {
+            return SubmissionVerdict.MEMORY_LIMIT_EXCEEDED;
+        }
 
         if (!result.isPassed()) {
             return SubmissionVerdict.WRONG_ANSWER;
