@@ -69,7 +69,7 @@ public class ExecutionService {
             verdict,
             calculateTotalExecutionTime(results),
             calculateMaxMemoryUsed(results),
-            null,
+            findErrorMessage(results),
             results
     );
 }
@@ -176,21 +176,37 @@ public ExecutionResult executeSubmission(Long submissionId) {
 
     List<ProblemTestCase> testCases =
             getTestCases(submission.getProblem().getId());
+    try {
+        ExecutionResult result = execute(request, testCases);
 
-    ExecutionResult result = execute(request, testCases);
+        submissionService.updateExecutionResult(
+                submissionId,
+                SubmissionStatus.COMPLETED,
+                result.getVerdict(),
+                result.getExecutionTime(),
+                result.getMemoryUsed()
+        );
 
-    submissionService.updateExecutionResult(
-            submissionId,
-            SubmissionStatus.COMPLETED,
-            result.getVerdict(),
-            result.getExecutionTime(),
-            result.getMemoryUsed()
-    );
+        return result;
+    } catch (Exception exception) {
+        try {
+            submissionService.updateExecutionResult(
+                    submissionId,
+                    SubmissionStatus.COMPLETED,
+                    SubmissionVerdict.RUNTIME_ERROR,
+                    0L,
+                    0L
+            );
+        } catch (Exception updateException) {
+            updateException.addSuppressed(exception);
+            throw updateException;
+        }
 
-    return result;
+        throw exception;
+    }
 }
 
-private long calculateMaxMemoryUsed(
+    private long calculateMaxMemoryUsed(
         List<TestCaseExecutionResult> results) {
 
     long maxMemory = 0L;
@@ -206,6 +222,19 @@ private long calculateMaxMemoryUsed(
     }
 
     return maxMemory;
+}
+
+private String findErrorMessage(
+        List<TestCaseExecutionResult> results) {
+
+    for (TestCaseExecutionResult result : results) {
+
+        if (result.getErrorType() != SandboxErrorType.NONE) {
+            return result.getErrorMessage();
+        }
+    }
+
+    return null;
 }
 
 }

@@ -4,6 +4,7 @@ import com.codearena.codearena.entity.ProblemTestCase;
 import com.codearena.codearena.model.ExecutionRequest;
 import com.codearena.codearena.model.TestCaseExecutionResult;
 import com.codearena.codearena.model.SandboxExecutionResult;
+import com.codearena.codearena.model.SandboxErrorType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,7 +30,8 @@ public TestCaseExecutionResult run(
             );
 
     boolean passed =
-            sandboxResult.isSuccess()
+            sandboxResult.getErrorType() == SandboxErrorType.NONE
+            && sandboxResult.isSuccess()
             && sandboxResult.getOutput()
                     .trim()
                     .equals(testCase.getExpectedOutput().trim());
@@ -40,7 +42,8 @@ public TestCaseExecutionResult run(
             sandboxResult.getExecutionTime(),
             sandboxResult.getMemoryUsed(),
             sandboxResult.getOutput(),
-            sandboxResult.getErrorMessage()
+            sandboxResult.getErrorMessage(),
+            sandboxResult.getErrorType()
     );
 }
 }
