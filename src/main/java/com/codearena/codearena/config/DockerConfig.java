@@ -28,4 +28,27 @@ public class DockerConfig {
                 httpClient
         );
     }
+    @Bean
+public DockerClient dockerClient() {
+
+    DefaultDockerClientConfig config =
+            DefaultDockerClientConfig.createDefaultConfigBuilder()
+                    .build();
+
+    ApacheDockerHttpClient httpClient =
+            new ApacheDockerHttpClient.Builder()
+                    .dockerHost(config.getDockerHost())
+                    .sslConfig(config.getSSLConfig())
+                    .build();
+
+    DockerClient dockerClient =
+            DockerClientImpl.getInstance(
+                    config,
+                    httpClient
+            );
+
+    dockerClient.pingCmd().exec();
+
+    return dockerClient;
+}
 }
