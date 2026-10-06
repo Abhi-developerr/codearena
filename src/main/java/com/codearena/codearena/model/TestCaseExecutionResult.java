@@ -3,17 +3,11 @@ package com.codearena.codearena.model;
 public class TestCaseExecutionResult {
 
     private Long testCaseId;
-
     private boolean passed;
-
     private Long executionTime;
-
     private Long memoryUsed;
-
     private String actualOutput;
-
     private String errorMessage;
-
     private SandboxErrorType errorType;
 
     public TestCaseExecutionResult() {
