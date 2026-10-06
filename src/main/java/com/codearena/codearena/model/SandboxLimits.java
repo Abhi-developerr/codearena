@@ -6,18 +6,22 @@ public class SandboxLimits {
     private final long memoryLimitMb;
 
     public SandboxLimits(
-            long timeoutMillis,
-            long memoryLimitMb) {
+        long timeoutMillis,
+        long memoryLimitMb) {
 
-        this.timeoutMillis = timeoutMillis;
-        this.memoryLimitMb = memoryLimitMb;
+    if (timeoutMillis <= 0) {
+        throw new IllegalArgumentException(
+                "Sandbox timeout must be greater than zero"
+        );
     }
 
-    public long getTimeoutMillis() {
-        return timeoutMillis;
+    if (memoryLimitMb <= 0) {
+        throw new IllegalArgumentException(
+                "Sandbox memory limit must be greater than zero"
+        );
     }
 
-    public long getMemoryLimitMb() {
-        return memoryLimitMb;
-    }
+    this.timeoutMillis = timeoutMillis;
+    this.memoryLimitMb = memoryLimitMb;
+}
 }
