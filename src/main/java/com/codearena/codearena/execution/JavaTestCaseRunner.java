@@ -3,9 +3,9 @@ package com.codearena.codearena.execution;
 import org.springframework.stereotype.Component;
 
 import com.codearena.codearena.entity.ProblemTestCase;
+import com.codearena.codearena.entity.SubmissionLanguage;
 import com.codearena.codearena.model.ExecutionRequest;
 import com.codearena.codearena.model.SandboxErrorType;
-import com.codearena.codearena.entity.SubmissionLanguage;
 import com.codearena.codearena.model.SandboxExecutionResult;
 import com.codearena.codearena.model.TestCaseExecutionResult;
 
@@ -20,16 +20,30 @@ public class JavaTestCaseRunner implements TestCaseRunner {
         this.sandboxExecutor = sandboxExecutor;
     }
 
-  @Override
+ @Override
 public TestCaseExecutionResult run(
         ExecutionRequest request,
         ProblemTestCase testCase) {
 
-                if (request.getLanguage() != SubmissionLanguage.JAVA) {
-    throw new IllegalArgumentException(
-            "JavaTestCaseRunner supports only Java"
-    );
-}
+    if (request.getLanguage() != SubmissionLanguage.JAVA) {
+        throw new IllegalArgumentException(
+                "JavaTestCaseRunner supports only Java"
+        );
+    }
+
+    if (request.getSourceCode() == null
+            || request.getSourceCode().isBlank()) {
+
+        throw new IllegalArgumentException(
+                "Source code cannot be empty"
+        );
+    }
+
+    if (testCase == null) {
+        throw new IllegalArgumentException(
+                "Test case cannot be null"
+        );
+    }
 
     SandboxExecutionResult sandboxResult =
             sandboxExecutor.execute(
@@ -37,12 +51,16 @@ public TestCaseExecutionResult run(
                     testCase.getInput()
             );
 
-    boolean passed =
-            sandboxResult.getErrorType() == SandboxErrorType.NONE
-            && sandboxResult.isSuccess()
-            && sandboxResult.getOutput()
-                    .trim()
-                    .equals(testCase.getExpectedOutput().trim());
+    boolean passed = false;
+
+    if (sandboxResult.getErrorType() == SandboxErrorType.NONE) {
+
+        passed = sandboxResult.isSuccess()
+                && isOutputMatching(
+                        sandboxResult.getOutput(),
+                        testCase.getExpectedOutput()
+                );
+    }
 
     return new TestCaseExecutionResult(
             testCase.getId(),
@@ -54,4 +72,20 @@ public TestCaseExecutionResult run(
             sandboxResult.getErrorType()
     );
 }
+
+private boolean isOutputMatching(
+        String actualOutput,
+        String expectedOutput) {
+
+    String actual = actualOutput == null
+            ? ""
+            : actualOutput.trim();
+
+    String expected = expectedOutput == null
+            ? ""
+            : expectedOutput.trim();
+
+    return actual.equals(expected);
+}
+
 }
