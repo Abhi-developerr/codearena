@@ -1,6 +1,9 @@
 package com.codearena.codearena.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.codearena.codearena.model.SandboxLimits;
+
+import com.codearena.codearena.model.SandboxLimits;
 
 @ConfigurationProperties(prefix = "sandbox")
 public class SandboxProperties {
@@ -23,4 +26,14 @@ public class SandboxProperties {
     public void setMemoryLimitMb(long memoryLimitMb) {
         this.memoryLimitMb = memoryLimitMb;
     }
+
+    public SandboxLimits toLimits() {
+
+    return new SandboxLimits(
+            timeoutMillis,
+            memoryLimitMb
+    );
+}
+
+
 }
