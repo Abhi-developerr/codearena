@@ -10,6 +10,7 @@ public class SandboxProperties {
 
     private long timeoutMillis;
     private long memoryLimitMb;
+    private String dockerImage;
 
     public long getTimeoutMillis() {
         return timeoutMillis;
@@ -25,6 +26,14 @@ public class SandboxProperties {
 
     public void setMemoryLimitMb(long memoryLimitMb) {
         this.memoryLimitMb = memoryLimitMb;
+    }
+
+  public String getDockerImage() {
+    return dockerImage;
+}
+
+    public void setDockerImage(String dockerImage) {
+        this.dockerImage = dockerImage;
     }
 
     public SandboxLimits toLimits() {
