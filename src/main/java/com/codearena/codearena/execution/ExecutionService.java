@@ -59,17 +59,32 @@ public class ExecutionService {
         ExecutionRequest request,
         List<ProblemTestCase> testCases) {
 
+    if (testCases == null || testCases.isEmpty()) {
+        throw new IllegalArgumentException(
+                "Problem has no test cases"
+        );
+    }
+
     List<TestCaseExecutionResult> results =
             runAllTestCases(request, testCases);
 
     SubmissionVerdict verdict =
             determineVerdict(results);
 
+    long totalExecutionTime =
+            calculateTotalExecutionTime(results);
+
+    long maxMemoryUsed =
+            calculateMaxMemoryUsed(results);
+
+    String errorMessage =
+            findErrorMessage(results);
+
     return new ExecutionResult(
             verdict,
-            calculateTotalExecutionTime(results),
-            calculateMaxMemoryUsed(results),
-            findErrorMessage(results),
+            totalExecutionTime,
+            maxMemoryUsed,
+            errorMessage,
             results
     );
 }

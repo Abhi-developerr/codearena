@@ -1,11 +1,13 @@
 package com.codearena.codearena.execution;
 
+import org.springframework.stereotype.Component;
+
 import com.codearena.codearena.entity.ProblemTestCase;
 import com.codearena.codearena.model.ExecutionRequest;
-import com.codearena.codearena.model.TestCaseExecutionResult;
-import com.codearena.codearena.model.SandboxExecutionResult;
 import com.codearena.codearena.model.SandboxErrorType;
-import org.springframework.stereotype.Component;
+import com.codearena.codearena.entity.SubmissionLanguage;
+import com.codearena.codearena.model.SandboxExecutionResult;
+import com.codearena.codearena.model.TestCaseExecutionResult;
 
 @Component
 public class JavaTestCaseRunner implements TestCaseRunner {
@@ -22,6 +24,12 @@ public class JavaTestCaseRunner implements TestCaseRunner {
 public TestCaseExecutionResult run(
         ExecutionRequest request,
         ProblemTestCase testCase) {
+
+                if (request.getLanguage() != SubmissionLanguage.JAVA) {
+    throw new IllegalArgumentException(
+            "JavaTestCaseRunner supports only Java"
+    );
+}
 
     SandboxExecutionResult sandboxResult =
             sandboxExecutor.execute(

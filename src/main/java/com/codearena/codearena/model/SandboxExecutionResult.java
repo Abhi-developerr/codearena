@@ -1,7 +1,5 @@
 package com.codearena.codearena.model;
 
-import com.codearena.codearena.model.SandboxErrorType;
-
 public class SandboxExecutionResult {
 
     private boolean success;
