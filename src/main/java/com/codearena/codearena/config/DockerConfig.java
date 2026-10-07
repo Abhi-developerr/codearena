@@ -11,25 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class DockerConfig {
 
     @Bean
-    public DockerClient dockerClient() {
-
-        DefaultDockerClientConfig config =
-                DefaultDockerClientConfig.createDefaultConfigBuilder()
-                        .build();
-
-        ApacheDockerHttpClient httpClient =
-                new ApacheDockerHttpClient.Builder()
-                        .dockerHost(config.getDockerHost())
-                        .sslConfig(config.getSSLConfig())
-                        .build();
-
-        return DockerClientImpl.getInstance(
-                config,
-                httpClient
-        );
-    }
-    @Bean
-public DockerClient dockerClient() {
+        DockerClient dockerClient() {
 
     DefaultDockerClientConfig config =
             DefaultDockerClientConfig.createDefaultConfigBuilder()

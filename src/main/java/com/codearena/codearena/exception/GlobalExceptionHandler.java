@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     }
 
    @ExceptionHandler(UserNotFoundException.class)
-public ResponseEntity<ErrorResponse> handleUserNotFound(
+    public ResponseEntity<ErrorResponse> handleUserNotFound(
         UserNotFoundException exception) {
 
     ErrorResponse error =

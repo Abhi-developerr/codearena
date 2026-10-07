@@ -99,6 +99,7 @@ private SubmissionResponse toResponse(
             submission.getUpdatedAt()
     );
 }
+
 @Transactional(readOnly = true)
 public SubmissionResponse getMySubmission(
         Long userId,

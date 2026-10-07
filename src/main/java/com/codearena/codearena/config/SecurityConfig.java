@@ -41,11 +41,11 @@ public class SecurityConfig {
     }
 
     @Bean
-public AuthenticationManager authenticationManager() {
+    private AuthenticationManager authenticationManager() {
         return new ProviderManager(authenticationProvider());
 }
 
-private DaoAuthenticationProvider authenticationProvider() {
+     private DaoAuthenticationProvider authenticationProvider() {
 
     DaoAuthenticationProvider provider =
             new DaoAuthenticationProvider(userDetailsService);
