@@ -7,6 +7,19 @@ import com.github.dockerjava.api.DockerClient;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.command.CopyArchiveToContainerCmd;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import com.github.dockerjava.api.model.ArchiveEntry;
+import com.github.dockerjava.core.command.BuildImageResultCallback;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 @Component
 @Primary
@@ -95,25 +108,54 @@ private void startContainer(String containerId) {
             .exec();
 }
 
-private String createWriteSourceExec(
-        String containerId,
-        String sourceCode) {
-
-    String command =
-            "printf '%s' " +
-            shellQuote(sourceCode) +
-            " > /tmp/Main.java";
-
-    return dockerClient
-            .execCreateCmd(containerId)
-            .withCmd("sh", "-c", command)
-            .exec()
-            .getId();
-}
-
 private String shellQuote(String value) {
 
     return "'" + value.replace("'", "'\\''") + "'";
 }
+
+private void copySourceCodeToContainer(
+        String containerId,
+        String sourceCode) {
+
+    
+}
+
+private byte[] createSourceArchive(String sourceCode) {
+
+    try {
+        ByteArrayOutputStream outputStream =
+                new ByteArrayOutputStream();
+
+        TarArchiveOutputStream tarOutputStream =
+                new TarArchiveOutputStream(outputStream);
+
+        byte[] sourceBytes =
+                sourceCode.getBytes(StandardCharsets.UTF_8);
+
+        TarArchiveEntry entry =
+                new TarArchiveEntry("Main.java");
+
+        entry.setSize(sourceBytes.length);
+
+        tarOutputStream.putArchiveEntry(entry);
+
+        tarOutputStream.write(sourceBytes);
+
+        tarOutputStream.closeArchiveEntry();
+
+        tarOutputStream.finish();
+        tarOutputStream.close();
+
+        return outputStream.toByteArray();
+
+    } catch (IOException exception) {
+
+        throw new IllegalStateException(
+                "Failed to create source archive",
+                exception
+        );
+    }
+}
+
 
 }
