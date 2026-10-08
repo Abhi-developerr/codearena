@@ -12,6 +12,7 @@ import com.github.dockerjava.api.model.HostConfig;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,55 +40,57 @@ public class DockerSandboxExecutor implements SandboxExecutor {
         this.sandboxProperties = sandboxProperties;
     }
 
-    @Override
-    public SandboxExecutionResult execute(
-            String sourceCode,
-            String input) {
+@Override
+public SandboxExecutionResult execute(
+        String sourceCode,
+        String input) {
 
-        long startedAt = System.currentTimeMillis();
-        String containerId = null;
+    String containerId = null;
 
-        try {
-            ensureImageAvailable();
-            containerId = createContainer();
-            startContainer(containerId);
-            copySourceCodeToContainer(containerId, sourceCode, input);
+    try {
 
-            ExecCommandResult compilation = compileSourceCode(containerId);
-            if (compilation.getExitCode() == null
-                    || compilation.getExitCode() != 0) {
-                return new SandboxExecutionResult(
-                        false,
-                        compilation.getStdout(),
-                        compilation.getStderr(),
-                        System.currentTimeMillis() - startedAt,
-                        0L,
-                        SandboxErrorType.COMPILATION_ERROR
-                );
-            }
+        ensureImageAvailable();
 
-            ExecCommandResult execution = executeCompiledCode(containerId);
-            boolean success = execution.getExitCode() != null
-                    && execution.getExitCode() == 0;
+        containerId = createContainer();
 
-            return new SandboxExecutionResult(
-                    success,
-                    execution.getStdout(),
-                    success ? "" : execution.getStderr(),
-                    System.currentTimeMillis() - startedAt,
-                    0L,
-                    success
-                            ? SandboxErrorType.NONE
-                            : SandboxErrorType.RUNTIME_ERROR
-            );
-        } finally {
-            if (containerId != null) {
-                dockerClient.removeContainerCmd(containerId)
-                        .withForce(true)
-                        .exec();
-            }
+        startContainer(containerId);
+
+        copySourceCodeToContainer(
+                containerId,
+                sourceCode
+        );
+
+        copyInputToContainer(
+                containerId,
+                input
+        );
+        
+        ExecCommandResult compilationResult =
+        compileSourceCode(containerId);
+
+if (compilationResult.getExitCode() != 0) {
+
+    return new SandboxExecutionResult(
+            false,
+            "",
+            compilationResult.getStderr(),
+            0L,
+            0L,
+            SandboxErrorType.COMPILATION_ERROR
+    );
+}
+
+        throw new UnsupportedOperationException(
+                "Docker compilation and execution are not implemented yet"
+        );
+
+    } finally {
+
+        if (containerId != null) {
+            removeContainer(containerId);
         }
     }
+}
 
     private void ensureImageAvailable() {
 
@@ -321,4 +324,71 @@ private ExecCommandResult executeCompiledCode(
         );
     }
 }
+
+private void copyInputToContainer(
+        String containerId,
+        String input) {
+
+    byte[] archive = createInputArchive(input);
+
+    dockerClient
+            .copyArchiveToContainerCmd(containerId)
+            .withRemotePath("/tmp")
+            .withTarInputStream(
+                    new ByteArrayInputStream(archive)
+            )
+            .exec();
+}
+
+private byte[] createInputArchive(String input) {
+
+    try {
+        ByteArrayOutputStream outputStream =
+                new ByteArrayOutputStream();
+
+        TarArchiveOutputStream tarOutputStream =
+                new TarArchiveOutputStream(outputStream);
+
+        byte[] inputBytes =
+                (input == null ? "" : input)
+                        .getBytes(StandardCharsets.UTF_8);
+
+        TarArchiveEntry entry =
+                new TarArchiveEntry("input.txt");
+
+        entry.setSize(inputBytes.length);
+
+        tarOutputStream.putArchiveEntry(entry);
+        tarOutputStream.write(inputBytes);
+        tarOutputStream.closeArchiveEntry();
+
+        tarOutputStream.finish();
+        tarOutputStream.close();
+
+        return outputStream.toByteArray();
+
+    } catch (IOException exception) {
+
+        throw new IllegalStateException(
+                "Failed to create input archive",
+                exception
+        );
+    }
+}
+
+private void removeContainer(String containerId) {
+
+    try {
+        dockerClient
+                .removeContainerCmd(containerId)
+                .withForce(true)
+                .exec();
+
+    } catch (Exception exception) {
+
+        // Cleanup failure ko original execution error
+        // ko hide nahi karna chahiye.
+    }
+}
+
 }
