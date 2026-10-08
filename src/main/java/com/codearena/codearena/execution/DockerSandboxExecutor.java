@@ -16,10 +16,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import com.github.dockerjava.api.model.ArchiveEntry;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.command.ExecStartResultCallback;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import com.codearena.codearena.model.ExecCommandResult;
+import com.github.dockerjava.api.command.ExecCreateCmdResponse;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @Primary
@@ -117,7 +119,15 @@ private void copySourceCodeToContainer(
         String containerId,
         String sourceCode) {
 
-    
+    byte[] archive = createSourceArchive(sourceCode);
+
+    dockerClient
+            .copyArchiveToContainerCmd(containerId)
+            .withRemotePath("/tmp")
+            .withTarInputStream(
+                    new java.io.ByteArrayInputStream(archive)
+            )
+            .exec();
 }
 
 private byte[] createSourceArchive(String sourceCode) {
@@ -153,6 +163,131 @@ private byte[] createSourceArchive(String sourceCode) {
         throw new IllegalStateException(
                 "Failed to create source archive",
                 exception
+        );
+    }
+}
+
+private String readSourceFileFromContainer(String containerId) {
+
+    ExecCreateCmdResponse execResponse =
+            dockerClient
+                    .execCreateCmd(containerId)
+                    .withCmd("sh", "-c", "cat /tmp/Main.java")
+                    .exec();
+
+    dockerClient
+            .execStartCmd(execResponse.getId())
+            .exec();
+
+    return execResponse.getId();
+}
+
+private String readSourceFileFromContainer(
+        String containerId) {
+
+    ExecCreateCmdResponse execResponse =
+            dockerClient
+                    .execCreateCmd(containerId)
+                    .withCmd("sh", "-c", "cat /tmp/Main.java")
+                    .exec();
+
+    ByteArrayOutputStream outputStream =
+            new ByteArrayOutputStream();
+
+    try {
+
+        dockerClient
+                .execStartCmd(execResponse.getId())
+                .exec(
+                    new ExecStartResultCallback(
+                            outputStream,
+                            outputStream
+                    )
+                )
+                .awaitCompletion(5, TimeUnit.SECONDS);
+
+        return outputStream.toString(
+                StandardCharsets.UTF_8
+        );
+
+    } catch (InterruptedException exception) {
+
+        Thread.currentThread().interrupt();
+
+        throw new IllegalStateException(
+                "Interrupted while reading source file",
+                exception
+        );
+    }
+}
+
+private ExecCommandResult compileSourceCode(
+        String containerId) {
+
+    ExecCreateCmdResponse execResponse =
+            dockerClient
+                    .execCreateCmd(containerId)
+                    .withCmd(
+                            "sh",
+                            "-c",
+                            "cd /tmp && javac Main.java"
+                    )
+                    .exec();
+
+    ByteArrayOutputStream stdout =
+            new ByteArrayOutputStream();
+
+    ByteArrayOutputStream stderr =
+            new ByteArrayOutputStream();
+
+    try {
+
+        dockerClient
+                .execStartCmd(execResponse.getId())
+                .exec(
+                        new ExecStartResultCallback(
+                                stdout,
+                                stderr
+                        )
+                )
+                .awaitCompletion(5, TimeUnit.SECONDS);
+
+        InspectExecResponse inspectResponse =
+                dockerClient
+                        .inspectExecCmd(execResponse.getId())
+                        .exec();
+
+        return new ExecCommandResult(
+                inspectResponse.getExitCode(),
+                stdout.toString(StandardCharsets.UTF_8),
+                stderr.toString(StandardCharsets.UTF_8)
+        );
+
+    } catch (InterruptedException exception) {
+
+        Thread.currentThread().interrupt();
+
+        throw new IllegalStateException(
+                "Compilation was interrupted",
+                exception
+        );
+    }
+}
+
+private void validateCompilationResult(
+        ExecCommandResult result) {
+
+    if (result.getExitCode() == null) {
+        throw new IllegalStateException(
+                "Compilation exit code is unavailable"
+        );
+    }
+
+    if (result.getExitCode() != 0) {
+
+        throw new IllegalStateException(
+                "Compilation failed: "
+                        + result.getStderr()
         );
     }
 }
