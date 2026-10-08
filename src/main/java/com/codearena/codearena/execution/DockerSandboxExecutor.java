@@ -6,6 +6,7 @@ import com.codearena.codearena.config.SandboxProperties;
 import com.github.dockerjava.api.DockerClient;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+import com.github.dockerjava.api.model.HostConfig;
 
 @Component
 @Primary
@@ -64,6 +65,55 @@ public class DockerSandboxExecutor implements SandboxExecutor {
             );
         }
     }
+}
+
+private String createContainer() {
+
+    String image = sandboxProperties.getDockerImage();
+
+    return dockerClient
+        .createContainerCmd(image)
+        .withCmd("sleep", "infinity")
+        .withHostConfig(
+                new HostConfig()
+                        .withMemory(
+                                sandboxLimits.getMemoryLimitMb()
+                                        * 1024L
+                                        * 1024L
+                        )
+                        .withNetworkMode("none")
+        )
+        .withUser("1000:1000")
+        .exec()
+        .getId();
+}
+
+private void startContainer(String containerId) {
+
+    dockerClient
+            .startContainerCmd(containerId)
+            .exec();
+}
+
+private String createWriteSourceExec(
+        String containerId,
+        String sourceCode) {
+
+    String command =
+            "printf '%s' " +
+            shellQuote(sourceCode) +
+            " > /tmp/Main.java";
+
+    return dockerClient
+            .execCreateCmd(containerId)
+            .withCmd("sh", "-c", command)
+            .exec()
+            .getId();
+}
+
+private String shellQuote(String value) {
+
+    return "'" + value.replace("'", "'\\''") + "'";
 }
 
 }
