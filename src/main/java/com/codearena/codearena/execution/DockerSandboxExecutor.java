@@ -2,22 +2,20 @@ package com.codearena.codearena.execution;
 
 import com.codearena.codearena.model.SandboxExecutionResult;
 import com.codearena.codearena.model.SandboxLimits;
+import com.codearena.codearena.model.SandboxErrorType;
 import com.codearena.codearena.config.SandboxProperties;
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.InspectExecResponse;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.command.CopyArchiveToContainerCmd;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import com.github.dockerjava.api.model.ArchiveEntry;
-import com.github.dockerjava.core.command.BuildImageResultCallback;
-import com.github.dockerjava.api.async.ResultCallback;
-import com.github.dockerjava.api.command.ExecStartResultCallback;
+import com.github.dockerjava.core.command.ExecStartResultCallback;
 
 import com.codearena.codearena.model.ExecCommandResult;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
@@ -46,9 +44,49 @@ public class DockerSandboxExecutor implements SandboxExecutor {
             String sourceCode,
             String input) {
 
-        throw new UnsupportedOperationException(
-                "Docker sandbox execution is not implemented yet"
-        );
+        long startedAt = System.currentTimeMillis();
+        String containerId = null;
+
+        try {
+            ensureImageAvailable();
+            containerId = createContainer();
+            startContainer(containerId);
+            copySourceCodeToContainer(containerId, sourceCode, input);
+
+            ExecCommandResult compilation = compileSourceCode(containerId);
+            if (compilation.getExitCode() == null
+                    || compilation.getExitCode() != 0) {
+                return new SandboxExecutionResult(
+                        false,
+                        compilation.getStdout(),
+                        compilation.getStderr(),
+                        System.currentTimeMillis() - startedAt,
+                        0L,
+                        SandboxErrorType.COMPILATION_ERROR
+                );
+            }
+
+            ExecCommandResult execution = executeCompiledCode(containerId);
+            boolean success = execution.getExitCode() != null
+                    && execution.getExitCode() == 0;
+
+            return new SandboxExecutionResult(
+                    success,
+                    execution.getStdout(),
+                    success ? "" : execution.getStderr(),
+                    System.currentTimeMillis() - startedAt,
+                    0L,
+                    success
+                            ? SandboxErrorType.NONE
+                            : SandboxErrorType.RUNTIME_ERROR
+            );
+        } finally {
+            if (containerId != null) {
+                dockerClient.removeContainerCmd(containerId)
+                        .withForce(true)
+                        .exec();
+            }
+        }
     }
 
     private void ensureImageAvailable() {
@@ -110,16 +148,12 @@ private void startContainer(String containerId) {
             .exec();
 }
 
-private String shellQuote(String value) {
-
-    return "'" + value.replace("'", "'\\''") + "'";
-}
-
 private void copySourceCodeToContainer(
         String containerId,
-        String sourceCode) {
+        String sourceCode,
+        String input) {
 
-    byte[] archive = createSourceArchive(sourceCode);
+    byte[] archive = createSourceArchive(sourceCode, input);
 
     dockerClient
             .copyArchiveToContainerCmd(containerId)
@@ -130,7 +164,7 @@ private void copySourceCodeToContainer(
             .exec();
 }
 
-private byte[] createSourceArchive(String sourceCode) {
+private byte[] createSourceArchive(String sourceCode, String input) {
 
     try {
         ByteArrayOutputStream outputStream =
@@ -153,6 +187,15 @@ private byte[] createSourceArchive(String sourceCode) {
 
         tarOutputStream.closeArchiveEntry();
 
+        byte[] inputBytes =
+                (input == null ? "" : input).getBytes(StandardCharsets.UTF_8);
+        TarArchiveEntry inputEntry =
+                new TarArchiveEntry("input.txt");
+        inputEntry.setSize(inputBytes.length);
+        tarOutputStream.putArchiveEntry(inputEntry);
+        tarOutputStream.write(inputBytes);
+        tarOutputStream.closeArchiveEntry();
+
         tarOutputStream.finish();
         tarOutputStream.close();
 
@@ -162,60 +205,6 @@ private byte[] createSourceArchive(String sourceCode) {
 
         throw new IllegalStateException(
                 "Failed to create source archive",
-                exception
-        );
-    }
-}
-
-private String readSourceFileFromContainer(String containerId) {
-
-    ExecCreateCmdResponse execResponse =
-            dockerClient
-                    .execCreateCmd(containerId)
-                    .withCmd("sh", "-c", "cat /tmp/Main.java")
-                    .exec();
-
-    dockerClient
-            .execStartCmd(execResponse.getId())
-            .exec();
-
-    return execResponse.getId();
-}
-
-private String readSourceFileFromContainer(
-        String containerId) {
-
-    ExecCreateCmdResponse execResponse =
-            dockerClient
-                    .execCreateCmd(containerId)
-                    .withCmd("sh", "-c", "cat /tmp/Main.java")
-                    .exec();
-
-    ByteArrayOutputStream outputStream =
-            new ByteArrayOutputStream();
-
-    try {
-
-        dockerClient
-                .execStartCmd(execResponse.getId())
-                .exec(
-                    new ExecStartResultCallback(
-                            outputStream,
-                            outputStream
-                    )
-                )
-                .awaitCompletion(5, TimeUnit.SECONDS);
-
-        return outputStream.toString(
-                StandardCharsets.UTF_8
-        );
-
-    } catch (InterruptedException exception) {
-
-        Thread.currentThread().interrupt();
-
-        throw new IllegalStateException(
-                "Interrupted while reading source file",
                 exception
         );
     }
@@ -258,7 +247,9 @@ private ExecCommandResult compileSourceCode(
                         .exec();
 
         return new ExecCommandResult(
-                inspectResponse.getExitCode(),
+                inspectResponse.getExitCode() == null
+                        ? null
+                        : inspectResponse.getExitCode().longValue(),
                 stdout.toString(StandardCharsets.UTF_8),
                 stderr.toString(StandardCharsets.UTF_8)
         );
@@ -274,23 +265,60 @@ private ExecCommandResult compileSourceCode(
     }
 }
 
-private void validateCompilationResult(
-        ExecCommandResult result) {
+private ExecCommandResult executeCompiledCode(
+        String containerId) {
 
-    if (result.getExitCode() == null) {
-        throw new IllegalStateException(
-                "Compilation exit code is unavailable"
+    String command =
+            "cd /tmp && java Main < input.txt";
+
+    ExecCreateCmdResponse execResponse =
+            dockerClient
+                    .execCreateCmd(containerId)
+                    .withCmd("sh", "-c", command)
+                    .exec();
+
+    ByteArrayOutputStream stdout =
+            new ByteArrayOutputStream();
+
+    ByteArrayOutputStream stderr =
+            new ByteArrayOutputStream();
+
+    try {
+
+        dockerClient
+                .execStartCmd(execResponse.getId())
+                .exec(
+                        new ExecStartResultCallback(
+                                stdout,
+                                stderr
+                        )
+                )
+                .awaitCompletion(
+                        sandboxLimits.getTimeoutMillis(),
+                        TimeUnit.MILLISECONDS
+                );
+
+        InspectExecResponse inspectResponse =
+                dockerClient
+                        .inspectExecCmd(execResponse.getId())
+                        .exec();
+
+        return new ExecCommandResult(
+                inspectResponse.getExitCode() == null
+                        ? null
+                        : inspectResponse.getExitCode().longValue(),
+                stdout.toString(StandardCharsets.UTF_8),
+                stderr.toString(StandardCharsets.UTF_8)
         );
-    }
 
-    if (result.getExitCode() != 0) {
+    } catch (InterruptedException exception) {
+
+        Thread.currentThread().interrupt();
 
         throw new IllegalStateException(
-                "Compilation failed: "
-                        + result.getStderr()
+                "Code execution was interrupted",
+                exception
         );
     }
 }
-
-
 }

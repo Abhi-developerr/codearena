@@ -24,4 +24,12 @@ public class SandboxLimits {
     this.timeoutMillis = timeoutMillis;
     this.memoryLimitMb = memoryLimitMb;
 }
+
+    public long getTimeoutMillis() {
+        return timeoutMillis;
+    }
+
+    public long getMemoryLimitMb() {
+        return memoryLimitMb;
+    }
 }
