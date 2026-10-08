@@ -42,11 +42,9 @@ public class RefreshTokenService {
 
    public GeneratedRefreshToken createRefreshToken(User user) {
 
-    String rawToken =
-            UUID.randomUUID().toString();
+    String rawToken = UUID.randomUUID().toString();
 
-    String tokenHash =
-            tokenHashService.hash(rawToken);
+    String tokenHash = tokenHashService.hash(rawToken);
 
     RefreshToken refreshToken = new RefreshToken();
 
