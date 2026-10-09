@@ -70,14 +70,21 @@ public SandboxExecutionResult execute(
 
 if (compilationResult.getExitCode() != 0) {
 
-    return new SandboxExecutionResult(
-            false,
-            "",
-            compilationResult.getStderr(),
-            0L,
-            0L,
-            SandboxErrorType.COMPILATION_ERROR
-    );
+   ExecCommandResult executionResult =
+        executeCompiledCode(containerId, input);
+
+return new SandboxExecutionResult(
+        executionResult.getExitCode() != null
+                && executionResult.getExitCode() == 0,
+        executionResult.getStdout(),
+        executionResult.getStderr(),
+        0L,
+        0L,
+        executionResult.getExitCode() != null
+                && executionResult.getExitCode() == 0
+                ? SandboxErrorType.NONE
+                : SandboxErrorType.RUNTIME_ERROR
+);
 }
 
         throw new UnsupportedOperationException(
@@ -288,19 +295,23 @@ private ExecCommandResult executeCompiledCode(
 
     try {
 
+     ExecStartResultCallback callback =
+        new ExecStartResultCallback(stdout, stderr);
+
+boolean completed =
         dockerClient
                 .execStartCmd(execResponse.getId())
-                .exec(
-                        new ExecStartResultCallback(
-                                stdout,
-                                stderr
-                        )
-                )
+                .exec(callback)
                 .awaitCompletion(
                         sandboxLimits.getTimeoutMillis(),
                         TimeUnit.MILLISECONDS
                 );
 
+if (!completed) {
+    throw new IllegalStateException(
+            "Execution timed out"
+    );
+}
         InspectExecResponse inspectResponse =
                 dockerClient
                         .inspectExecCmd(execResponse.getId())
