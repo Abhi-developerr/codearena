@@ -132,10 +132,6 @@ try {
     );
 }
 
-        throw new UnsupportedOperationException(
-                "Docker compilation and execution are not implemented yet"
-        );
-
     } finally {
 
         if (containerId != null) {
@@ -205,10 +201,9 @@ private void startContainer(String containerId) {
 
 private void copySourceCodeToContainer(
         String containerId,
-        String sourceCode,
-        String input) {
+        String sourceCode) {
 
-    byte[] archive = createSourceArchive(sourceCode, input);
+    byte[] archive = createSourceArchive(sourceCode);
 
     dockerClient
             .copyArchiveToContainerCmd(containerId)
@@ -219,7 +214,7 @@ private void copySourceCodeToContainer(
             .exec();
 }
 
-private byte[] createSourceArchive(String sourceCode, String input) {
+private byte[] createSourceArchive(String sourceCode) {
 
     try {
         ByteArrayOutputStream outputStream =
@@ -240,15 +235,6 @@ private byte[] createSourceArchive(String sourceCode, String input) {
 
         tarOutputStream.write(sourceBytes);
 
-        tarOutputStream.closeArchiveEntry();
-
-        byte[] inputBytes =
-                (input == null ? "" : input).getBytes(StandardCharsets.UTF_8);
-        TarArchiveEntry inputEntry =
-                new TarArchiveEntry("input.txt");
-        inputEntry.setSize(inputBytes.length);
-        tarOutputStream.putArchiveEntry(inputEntry);
-        tarOutputStream.write(inputBytes);
         tarOutputStream.closeArchiveEntry();
 
         tarOutputStream.finish();
