@@ -432,4 +432,16 @@ private void removeContainer(String containerId) {
     }
 }
 
+private void stopContainer(String containerId) {
+    try {
+        dockerClient
+                .stopContainerCmd(containerId)
+                .withTimeout(1)
+                .exec();
+
+    } catch (Exception exception) {
+        // Cleanup failure should not hide the original error.
+    }
+}
+
 }
