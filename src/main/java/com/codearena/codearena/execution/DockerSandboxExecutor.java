@@ -92,32 +92,45 @@ if (compilationResult.getExitCode() != 0) {
     );
 }
 
-ExecCommandResult executionResult =
-        executeCompiledCode(containerId);
+try {
+    ExecCommandResult executionResult =
+            executeCompiledCode(containerId);
 
-if (executionResult.getExitCode() == null) {
+    if (executionResult.getExitCode() == null) {
+        return new SandboxExecutionResult(
+                false,
+                executionResult.getStdout(),
+                "Execution exit code is unavailable",
+                0L,
+                0L,
+                SandboxErrorType.RUNTIME_ERROR
+        );
+    }
+
+    boolean success =
+            executionResult.getExitCode() == 0;
+
+    return new SandboxExecutionResult(
+            success,
+            executionResult.getStdout(),
+            success ? null : executionResult.getStderr(),
+            0L,
+            0L,
+            success
+                    ? SandboxErrorType.NONE
+                    : SandboxErrorType.RUNTIME_ERROR
+    );
+
+} catch (SandboxTimeoutException exception) {
     return new SandboxExecutionResult(
             false,
-            executionResult.getStdout(),
-            "Execution exit code is unavailable",
+            "",
+            exception.getMessage(),
             0L,
             0L,
-            SandboxErrorType.RUNTIME_ERROR
+            SandboxErrorType.TIME_LIMIT_EXCEEDED
     );
 }
-
-boolean success = executionResult.getExitCode() == 0;
-
-return new SandboxExecutionResult(
-        success,
-        executionResult.getStdout(),
-        success ? null : executionResult.getStderr(),
-        0L,
-        0L,
-        success
-                ? SandboxErrorType.NONE
-                : SandboxErrorType.RUNTIME_ERROR
-);
 
         throw new UnsupportedOperationException(
                 "Docker compilation and execution are not implemented yet"
@@ -340,9 +353,13 @@ boolean completed =
                 );
 
 if (!completed) {
-    throw new SandboxTimeoutException("Execution timed out");
+    stopContainer(containerId);
+
+    throw new SandboxTimeoutException(
+            "Execution timed out"
+    );
 }
-        InspectExecResponse inspectResponse =
+    InspectExecResponse inspectResponse =
                 dockerClient
                         .inspectExecCmd(execResponse.getId())
                         .exec();
@@ -440,7 +457,7 @@ private void stopContainer(String containerId) {
                 .exec();
 
     } catch (Exception exception) {
-        // Cleanup failure should not hide the original error.
+       
     }
 }
 
