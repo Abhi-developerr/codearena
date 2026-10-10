@@ -4,6 +4,7 @@ import com.codearena.codearena.model.SandboxExecutionResult;
 import com.codearena.codearena.model.SandboxLimits;
 import com.codearena.codearena.model.SandboxErrorType;
 import com.codearena.codearena.config.SandboxProperties;
+import com.codearena.codearena.exception.SandboxTimeoutException;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectExecResponse;
 import org.springframework.context.annotation.Primary;
@@ -339,9 +340,7 @@ boolean completed =
                 );
 
 if (!completed) {
-    throw new IllegalStateException(
-            "Execution timed out"
-    );
+    throw new SandboxTimeoutException("Execution timed out");
 }
         InspectExecResponse inspectResponse =
                 dockerClient
