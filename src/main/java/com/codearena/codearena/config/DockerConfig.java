@@ -29,8 +29,6 @@ public class DockerConfig {
                     httpClient
             );
 
-    dockerClient.pingCmd().exec();
-
     return dockerClient;
 }
 }

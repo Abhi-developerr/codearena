@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class RefreshTokenCleanupService {
 
@@ -19,6 +21,7 @@ public class RefreshTokenCleanupService {
     }
 
         @Scheduled(fixedRateString = "${refresh-token.cleanup-interval}")
+    @Transactional
     public void deleteExpiredTokens() {
 
         refreshTokenRepository
