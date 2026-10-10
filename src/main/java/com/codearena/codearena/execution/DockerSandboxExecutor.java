@@ -65,27 +65,58 @@ public SandboxExecutionResult execute(
                 input
         );
         
-        ExecCommandResult compilationResult =
+      
+ExecCommandResult compilationResult =
         compileSourceCode(containerId);
 
-if (compilationResult.getExitCode() != 0) {
+if (compilationResult.getExitCode() == null) {
+    return new SandboxExecutionResult(
+            false,
+            "",
+            "Compilation exit code is unavailable",
+            0L,
+            0L,
+            SandboxErrorType.COMPILATION_ERROR
+    );
+}
 
-   ExecCommandResult executionResult =
-        executeCompiledCode(containerId, input);
+if (compilationResult.getExitCode() != 0) {
+    return new SandboxExecutionResult(
+            false,
+            "",
+            compilationResult.getStderr(),
+            0L,
+            0L,
+            SandboxErrorType.COMPILATION_ERROR
+    );
+}
+
+ExecCommandResult executionResult =
+        executeCompiledCode(containerId);
+
+if (executionResult.getExitCode() == null) {
+    return new SandboxExecutionResult(
+            false,
+            executionResult.getStdout(),
+            "Execution exit code is unavailable",
+            0L,
+            0L,
+            SandboxErrorType.RUNTIME_ERROR
+    );
+}
+
+boolean success = executionResult.getExitCode() == 0;
 
 return new SandboxExecutionResult(
-        executionResult.getExitCode() != null
-                && executionResult.getExitCode() == 0,
+        success,
         executionResult.getStdout(),
-        executionResult.getStderr(),
+        success ? null : executionResult.getStderr(),
         0L,
         0L,
-        executionResult.getExitCode() != null
-                && executionResult.getExitCode() == 0
+        success
                 ? SandboxErrorType.NONE
                 : SandboxErrorType.RUNTIME_ERROR
 );
-}
 
         throw new UnsupportedOperationException(
                 "Docker compilation and execution are not implemented yet"
