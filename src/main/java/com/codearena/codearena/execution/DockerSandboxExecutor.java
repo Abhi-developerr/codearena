@@ -18,6 +18,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.codearena.codearena.model.ExecCommandResult;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
@@ -26,6 +28,9 @@ import java.util.concurrent.TimeUnit;
 @Component
 @Primary
 public class DockerSandboxExecutor implements SandboxExecutor {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(DockerSandboxExecutor.class);
 
     private final DockerClient dockerClient;
     private final SandboxLimits sandboxLimits;
@@ -66,29 +71,37 @@ public SandboxExecutionResult execute(
                 input
         );
         
-      
+      long startTime = System.nanoTime();
 ExecCommandResult compilationResult =
-        compileSourceCode(containerId);
+      compileSourceCode(containerId);
+
+long executionTimeMillis =
+      elapsedMillis(startTime);
 
 if (compilationResult.getExitCode() == null) {
     return new SandboxExecutionResult(
             false,
             "",
             "Compilation exit code is unavailable",
-            0L,
+            executionTimeMillis,
             0L,
             SandboxErrorType.COMPILATION_ERROR
     );
 }
 
 if (compilationResult.getExitCode() != 0) {
+    SandboxErrorType errorType =
+            compilationResult.getExitCode() == 124L
+                    ? SandboxErrorType.TIME_LIMIT_EXCEEDED
+                    : SandboxErrorType.COMPILATION_ERROR;
+
     return new SandboxExecutionResult(
             false,
             "",
             compilationResult.getStderr(),
+            executionTimeMillis,
             0L,
-            0L,
-            SandboxErrorType.COMPILATION_ERROR
+            errorType
     );
 }
 
@@ -101,7 +114,7 @@ try {
                 false,
                 executionResult.getStdout(),
                 "Execution exit code is unavailable",
-                0L,
+                elapsedMillis(startTime),
                 0L,
                 SandboxErrorType.RUNTIME_ERROR
         );
@@ -114,7 +127,7 @@ try {
             success,
             executionResult.getStdout(),
             success ? null : executionResult.getStderr(),
-            0L,
+            elapsedMillis(startTime),
             0L,
             success
                     ? SandboxErrorType.NONE
@@ -126,7 +139,7 @@ try {
             false,
             "",
             exception.getMessage(),
-            0L,
+            elapsedMillis(startTime),
             0L,
             SandboxErrorType.TIME_LIMIT_EXCEEDED
     );
@@ -185,6 +198,7 @@ private String createContainer() {
                                         * 1024L
                                         * 1024L
                         )
+                        .withPidsLimit(256L)
                         .withNetworkMode("none")
         )
         .withUser("1000:1000")
@@ -282,7 +296,10 @@ boolean completed =
                                 stderr
                         )
                 )
-                .awaitCompletion(5, TimeUnit.SECONDS);
+                .awaitCompletion(
+                        sandboxLimits.getTimeoutMillis(),
+                        TimeUnit.MILLISECONDS
+                );
 
 if (!completed) {
     stopContainer(containerId);
@@ -442,9 +459,11 @@ private void removeContainer(String containerId) {
                 .exec();
 
     } catch (Exception exception) {
-
-        // Cleanup failure ko original execution error
-        // ko hide nahi karna chahiye.
+        logger.warn(
+                "Failed to remove sandbox container {}",
+                containerId,
+                exception
+        );
     }
 }
 
@@ -456,8 +475,18 @@ private void stopContainer(String containerId) {
                 .exec();
 
     } catch (Exception exception) {
-       
+        logger.warn(
+                "Failed to stop sandbox container {}",
+                containerId,
+                exception
+        );
     }
+}
+
+private long elapsedMillis(long startTimeNanos) {
+    return TimeUnit.NANOSECONDS.toMillis(
+            System.nanoTime() - startTimeNanos
+    );
 }
 
 }
