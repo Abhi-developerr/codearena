@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 
 @Component
 @Primary
+@SuppressWarnings("deprecation")
 public class DockerSandboxExecutor implements SandboxExecutor {
 
     private static final Logger logger =
@@ -318,9 +319,9 @@ if (!completed) {
                         .exec();
 
         return new ExecCommandResult(
-                inspectResponse.getExitCode() == null
+                inspectResponse.getExitCodeLong() == null
                         ? null
-                        : inspectResponse.getExitCode().longValue(),
+                        : inspectResponse.getExitCodeLong(),
                 stdout.toString(StandardCharsets.UTF_8),
                 stderr.toString(StandardCharsets.UTF_8)
         );
@@ -381,9 +382,9 @@ if (!completed) {
                         .exec();
 
         return new ExecCommandResult(
-                inspectResponse.getExitCode() == null
+                inspectResponse.getExitCodeLong() == null
                         ? null
-                        : inspectResponse.getExitCode().longValue(),
+                        : inspectResponse.getExitCodeLong(),
                 stdout.toString(StandardCharsets.UTF_8),
                 stderr.toString(StandardCharsets.UTF_8)
         );
