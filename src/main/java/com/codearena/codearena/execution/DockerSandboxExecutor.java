@@ -272,6 +272,8 @@ private ExecCommandResult compileSourceCode(
 
     try {
 
+       
+boolean completed =
         dockerClient
                 .execStartCmd(execResponse.getId())
                 .exec(
@@ -281,6 +283,17 @@ private ExecCommandResult compileSourceCode(
                         )
                 )
                 .awaitCompletion(5, TimeUnit.SECONDS);
+
+if (!completed) {
+    stopContainer(containerId);
+
+    return new ExecCommandResult(
+            124L,
+            "",
+            "Compilation timed out"
+    );
+}
+
 
         InspectExecResponse inspectResponse =
                 dockerClient
