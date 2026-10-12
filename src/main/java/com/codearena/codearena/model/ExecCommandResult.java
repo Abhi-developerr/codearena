@@ -1,8 +1,5 @@
 package com.codearena.codearena.model;
 
-import com.github.dockerjava.api.command.ExecCreateCmdResponse;
-import com.github.dockerjava.api.command.InspectExecResponse;
-
 public class ExecCommandResult {
 
     private final Long exitCode;
