@@ -76,10 +76,11 @@ public ResponseEntity<List<Contest>> getAllContestsForAdmin() {
 @PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<Contest> updateContest(
         @PathVariable Long id,
-       @Valid @RequestBody Contest contest) {
-    return ResponseEntity.ok(
-            contestService.updateContest(id, contest)
-    );
+        @Valid @RequestBody ContestRequest request) {
+
+    Contest updatedContest = contestService.updateContest(id, request);
+
+    return ResponseEntity.ok(updatedContest);
 }
 
 @GetMapping("/{id}/registrations/count")

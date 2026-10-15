@@ -3,6 +3,8 @@ package com.codearena.codearena.service;
 import com.codearena.codearena.entity.Contest;
 import com.codearena.codearena.repository.ContestRepository;
 
+import jakarta.validation.Valid;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -69,8 +71,6 @@ public Contest createContest(ContestRequest request) {
     return contestRepository.save(contest);
 }
 
-
-
     @Transactional
     public Contest publishContest(Long id) {
     Contest contest = contestRepository.findById(id)
@@ -85,40 +85,31 @@ public Contest createContest(ContestRequest request) {
 
     return contestRepository.save(contest);
     }
-
-    @Transactional
-    public Contest updateContest(Long id, Contest updatedContest) {
-        Contest contest = contestRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Contest not found with id: " + id
-                        )
-                );
-
-        if (updatedContest.getTitle() != null) {
-            contest.setTitle(updatedContest.getTitle());
-        }
-        if (updatedContest.getDescription() != null) {
-            contest.setDescription(updatedContest.getDescription());
-        }
-        if (updatedContest.getStartTime() != null) {
-            contest.setStartTime(updatedContest.getStartTime());
-        }
-        if (updatedContest.getEndTime() != null) {
-            contest.setEndTime(updatedContest.getEndTime());
-        }
-        if (contest.getStartTime() == null
-                || contest.getEndTime() == null
-                || !contest.getEndTime().isAfter(contest.getStartTime())) {
-            throw new IllegalArgumentException(
-                    "Contest end time must be after start time"
+   
+@Transactional
+public Contest updateContest(Long id, ContestRequest request) {
+    Contest contest = contestRepository.findById(id)
+            .orElseThrow(() ->
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Contest not found with id: " + id
+                    )
             );
-        }
 
-        return contestRepository.save(contest);
+    if (!request.getEndTime().isAfter(request.getStartTime())) {
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Contest end time must be after start time"
+        );
     }
 
+    contest.setTitle(request.getTitle());
+    contest.setDescription(request.getDescription());
+    contest.setStartTime(request.getStartTime());
+    contest.setEndTime(request.getEndTime());
+
+    return contestRepository.save(contest);
+}
 
 @Transactional
 public void deleteContest(Long id) {
