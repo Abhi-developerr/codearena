@@ -3,8 +3,8 @@ package com.codearena.codearena.controller;
 import com.codearena.codearena.dto.SubmissionCodeResponse;
 import com.codearena.codearena.dto.SubmissionRequest;
 import com.codearena.codearena.dto.SubmissionResponse;
-import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.codearena.service.SubmissionService;
+import com.codearena.codearena.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;

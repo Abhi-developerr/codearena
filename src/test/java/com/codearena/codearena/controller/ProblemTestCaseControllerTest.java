@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
@@ -41,6 +44,29 @@ void regularUserCannotAccessHiddenTestCases() throws Exception {
                     .accept(MediaType.APPLICATION_JSON)
     )
     .andExpect(status().isForbidden());
+
+    verifyNoInteractions(problemTestCaseService);
+}
+
+
+@Test
+void adminCannotCreateTestCaseWithBlankInput() throws Exception {
+
+    String requestBody = """
+            {
+                "input": "   ",
+                "expectedOutput": "5",
+                "hidden": false
+            }
+            """;
+
+    mockMvc.perform(
+            post("/api/problems/{problemId}/test-cases", 1L)
+                    .with(user("admin").roles("ADMIN"))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody)
+    )
+    .andExpect(status().isBadRequest());
 
     verifyNoInteractions(problemTestCaseService);
 }
