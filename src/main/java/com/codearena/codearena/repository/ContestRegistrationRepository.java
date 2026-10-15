@@ -12,5 +12,5 @@ public interface ContestRegistrationRepository
     boolean existsByContestIdAndUserId(Long contestId, Long userId);
 
     List<ContestRegistration> findByUserId(Long userId);
-
+    List<ContestRegistration> findByContestId(Long contestId);
 }

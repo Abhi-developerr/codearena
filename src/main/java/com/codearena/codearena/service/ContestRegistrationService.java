@@ -8,6 +8,7 @@ import com.codearena.codearena.repository.ContestRepository;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,14 +28,21 @@ public class ContestRegistrationService {
     @Transactional
     public ContestRegistration registerUser(
             Long contestId, Long userId) {
-
-        Contest contest = contestRepository.findById(contestId)
-                .orElseThrow(() ->
-                        new ResponseStatusException(
-                                HttpStatus.NOT_FOUND,
-                                "Contest not found"
+ 
+                    Contest contest = contestRepository.findById(contestId)
+                    .orElseThrow(() ->
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Contest not found"
                         )
                 );
+                
+                if (!LocalDateTime.now().isBefore(contest.getStartTime())) {
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "Registration is closed because the contest has started"
+                    );
+                }
 
         if (!contest.isPublished()) {
             throw new ResponseStatusException(
