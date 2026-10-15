@@ -13,4 +13,7 @@ public interface ContestRegistrationRepository
 
     List<ContestRegistration> findByUserId(Long userId);
     List<ContestRegistration> findByContestId(Long contestId);
+
+long countByContestId(Long contestId);
+
 }

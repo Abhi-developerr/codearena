@@ -48,7 +48,6 @@ public class ContestController {
                 .body(createdContest);
     }
 
-
 @PostMapping("/{id}/publish")
 @PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<Contest> publishContest(
@@ -76,6 +75,15 @@ public ResponseEntity<Contest> updateContest(
     );
 }
 
+@GetMapping("/{id}/registrations/count")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<Long> getRegistrationCount(
+        @PathVariable Long id) {
+
+    return ResponseEntity.ok(
+            contestRegistrationService.getRegistrationCount(id)
+    );
+}
 
 @DeleteMapping("/{id}")
 @PreAuthorize("hasRole('ADMIN')")

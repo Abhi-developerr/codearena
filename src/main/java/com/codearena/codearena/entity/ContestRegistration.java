@@ -1,4 +1,3 @@
-
 package com.codearena.codearena.entity;
 
 import jakarta.persistence.*;
@@ -23,8 +22,6 @@ public class ContestRegistration {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "contest_id", nullable = false)
     private Contest contest;
-
-    // User relationship agle step mein add karenge.
 
     @Column(name = "user_id", nullable = false)
     private Long userId;

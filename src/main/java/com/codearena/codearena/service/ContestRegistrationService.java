@@ -68,6 +68,17 @@ public class ContestRegistrationService {
         return registrationRepository.save(registration);
     }
 
+@Transactional(readOnly = true)
+public long getRegistrationCount(Long contestId) {
+    if (!contestRepository.existsById(contestId)) {
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Contest not found"
+        );
+    }
+
+    return registrationRepository.countByContestId(contestId);
+}
 
 @Transactional(readOnly = true)
 public java.util.List<ContestRegistration> getMyRegistrations(
