@@ -5,6 +5,7 @@ import com.codearena.codearena.model.SandboxLimits;
 import com.codearena.codearena.model.SandboxErrorType;
 import com.codearena.codearena.config.SandboxProperties;
 import com.codearena.codearena.exception.SandboxTimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectExecResponse;
 import org.springframework.context.annotation.Primary;
@@ -36,6 +37,10 @@ public class DockerSandboxExecutor implements SandboxExecutor {
     private final DockerClient dockerClient;
     private final SandboxLimits sandboxLimits;
     private final SandboxProperties sandboxProperties;
+
+    private long toMegabytes(long bytes) {
+    return bytes / (1024L * 1024L);
+}
 
     public DockerSandboxExecutor(
             DockerClient dockerClient,
@@ -151,6 +156,25 @@ try {
         if (containerId != null) {
             removeContainer(containerId);
         }
+    }
+}
+
+private void updatePeakMemory(
+        com.github.dockerjava.api.model.Statistics statistics,
+        java.util.concurrent.atomic.AtomicLong peakMemoryBytes) {
+
+    if (statistics == null || statistics.getMemoryStats() == null) {
+        return;
+    }
+
+    Object usageValue = statistics.getMemoryStats().get("usage");
+
+    if (usageValue instanceof Number) {
+        long usageBytes = ((Number) usageValue).longValue();
+
+        peakMemoryBytes.updateAndGet(
+                currentPeak -> Math.max(currentPeak, usageBytes)
+        );
     }
 }
 
