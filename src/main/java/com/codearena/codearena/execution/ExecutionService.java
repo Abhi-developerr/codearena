@@ -172,9 +172,8 @@ private SubmissionVerdict determineVerdict(
     return SubmissionVerdict.ACCEPTED;
 }
 
-public ExecutionResult executeSubmission(Long submissionId) {
 
-    submissionService.markAsRunning(submissionId);
+public ExecutionResult executeSubmission(Long submissionId) {
 
     Submission submission = submissionRepository.findById(submissionId)
             .orElseThrow(() ->
@@ -182,6 +181,8 @@ public ExecutionResult executeSubmission(Long submissionId) {
                             "Submission not found"
                     )
             );
+
+    submissionService.markAsRunning(submissionId);
 
     ExecutionRequest request = new ExecutionRequest(
             submission.getId(),
@@ -191,6 +192,7 @@ public ExecutionResult executeSubmission(Long submissionId) {
 
     List<ProblemTestCase> testCases =
             getTestCases(submission.getProblem().getId());
+
     try {
         ExecutionResult result = execute(request, testCases);
 
@@ -203,6 +205,7 @@ public ExecutionResult executeSubmission(Long submissionId) {
         );
 
         return result;
+
     } catch (Exception exception) {
         try {
             submissionService.updateExecutionResult(
@@ -253,5 +256,3 @@ private String findErrorMessage(
 }
 
 }
-
-  
