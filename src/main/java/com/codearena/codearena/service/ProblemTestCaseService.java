@@ -109,28 +109,14 @@ public List<ProblemTestCasePublicResponse> getSampleTestCases(
             .collect(Collectors.toList());
 }
 
+
 public ProblemTestCaseResponse updateTestCase(
         Long problemId,
         Long testCaseId,
         ProblemTestCaseRequest request) {
 
-    Problem problem =
-            problemRepository.findById(problemId)
-                    .orElseThrow(() ->
-                            new ProblemNotFoundException(
-                                    "Problem not found"
-                            )
-                    );
-
     ProblemTestCase testCase =
             findTestCaseForProblem(problemId, testCaseId);
-
-
-    if (!testCase.getProblem().getId().equals(problem.getId())) {
-        throw new IllegalArgumentException(
-                "Test case does not belong to this problem"
-        );
-    }
 
     testCase.setInput(
             request.getInput().trim()
@@ -155,27 +141,8 @@ public void deleteTestCase(
         Long problemId,
         Long testCaseId) {
 
-    Problem problem =
-            problemRepository.findById(problemId)
-                    .orElseThrow(() ->
-                            new ProblemNotFoundException(
-                                    "Problem not found"
-                            )
-                    );
-
     ProblemTestCase testCase =
-            problemTestCaseRepository.findById(testCaseId)
-                    .orElseThrow(() ->
-                            new IllegalArgumentException(
-                                    "Test case not found"
-                            )
-                    );
-
-    if (!testCase.getProblem().getId().equals(problem.getId())) {
-        throw new IllegalArgumentException(
-                "Test case does not belong to this problem"
-        );
-    }
+            findTestCaseForProblem(problemId, testCaseId);
 
     problemTestCaseRepository.delete(testCase);
 }
