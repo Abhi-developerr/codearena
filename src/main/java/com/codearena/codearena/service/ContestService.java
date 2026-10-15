@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import com.codearena.codearena.dto.ContestRequest;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -80,6 +81,13 @@ public Contest createContest(ContestRequest request) {
                             "Contest not found with id: " + id
                     )
             );
+
+if (!LocalDateTime.now().isBefore(contest.getStartTime())) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Cannot publish a contest after its start time"
+    );
+}
 
     contest.setPublished(true);
 

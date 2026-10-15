@@ -88,12 +88,21 @@ public ResponseEntity<ContestResponse> createContest(
 
 @PostMapping("/{id}/publish")
 @PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<Contest> publishContest(
+public ResponseEntity<ContestResponse> publishContest(
         @PathVariable Long id) {
 
-    Contest publishedContest = contestService.publishContest(id);
+    Contest contest = contestService.publishContest(id);
 
-    return ResponseEntity.ok(publishedContest);
+    ContestResponse response = new ContestResponse(
+            contest.getId(),
+            contest.getTitle(),
+            contest.getDescription(),
+            contest.getStartTime(),
+            contest.getEndTime(),
+            contest.isPublished()
+    );
+
+    return ResponseEntity.ok(response);
 }
 
 @GetMapping("/admin")
