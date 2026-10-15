@@ -105,6 +105,25 @@ public ResponseEntity<ContestResponse> publishContest(
     return ResponseEntity.ok(response);
 }
 
+@PostMapping("/{id}/archive")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<ContestResponse> archiveContest(
+        @PathVariable Long id) {
+
+    Contest contest = contestService.archiveContest(id);
+
+    ContestResponse response = new ContestResponse(
+            contest.getId(),
+            contest.getTitle(),
+            contest.getDescription(),
+            contest.getStartTime(),
+            contest.getEndTime(),
+            contest.isPublished()
+    );
+
+    return ResponseEntity.ok(response);
+}
+
 @GetMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<java.util.List<ContestResponse>>

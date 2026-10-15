@@ -31,6 +31,18 @@ private LocalDateTime startTime;
 @Column(nullable = false)
 private LocalDateTime endTime;
 
+
+@Column(nullable = false)
+private boolean archived = false;
+
+public boolean isArchived() {
+    return archived;
+}
+
+public void setArchived(boolean archived) {
+    this.archived = archived;
+}
+
     @Column(nullable = false)
     private boolean published = false;
 

@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface ContestRepository extends JpaRepository<Contest, Long> {
 
-    List<Contest> findByPublishedTrue();
+    List<Contest> findByPublishedTrueAndArchivedFalse();
 }

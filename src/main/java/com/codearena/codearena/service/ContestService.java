@@ -28,7 +28,7 @@ public class ContestService {
     }
 
     public List<Contest> getAllContests() {
-        return contestRepository.findByPublishedTrue();
+        return contestRepository.findByPublishedTrueAndArchivedFalse();
     }
 
     public List<Contest> getAllContestsForAdmin() {
@@ -140,5 +140,22 @@ public void deleteContest(Long id) {
 
     contestRepository.delete(contest);
 }
+
+@Transactional
+public Contest archiveContest(Long id) {
+    Contest contest = contestRepository.findById(id)
+            .orElseThrow(() ->
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Contest not found"
+                    )
+            );
+
+    contest.setArchived(true);
+    contest.setPublished(false);
+
+    return contestRepository.save(contest);
+}
+
 
 }
