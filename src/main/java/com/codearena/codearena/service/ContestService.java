@@ -44,13 +44,12 @@ public Contest getContestById(Long id) {
     )
 );
 
-    if (!contest.isPublished()) {
-        throw new ResponseStatusException(
+if (!contest.isPublished() || contest.isArchived()) {
+    throw new ResponseStatusException(
             HttpStatus.NOT_FOUND,
             "Contest not found with id: " + id
-        );
-    }
-
+    );
+}
     return contest;
 }
 
