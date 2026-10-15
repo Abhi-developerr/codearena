@@ -4,6 +4,8 @@ import com.codearena.codearena.entity.Contest;
 import com.codearena.codearena.repository.ContestRepository;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -30,13 +32,17 @@ public class ContestService {
 public Contest getContestById(Long id) {
     Contest contest = contestRepository.findById(id)
             .orElseThrow(() ->
-                    new RuntimeException(
-                            "Contest not found with id: " + id
-                    )
-            );
+    new ResponseStatusException(
+        HttpStatus.NOT_FOUND,
+        "Contest not found with id: " + id
+    )
+);
 
     if (!contest.isPublished()) {
-        throw new RuntimeException("Contest not found with id: " + id);
+        throw new ResponseStatusException(
+            HttpStatus.NOT_FOUND,
+            "Contest not found with id: " + id
+        );
     }
 
     return contest;
@@ -67,7 +73,8 @@ public Contest getContestById(Long id) {
     public Contest publishContest(Long id) {
     Contest contest = contestRepository.findById(id)
             .orElseThrow(() ->
-                    new RuntimeException(
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
                             "Contest not found with id: " + id
                     )
             );
@@ -81,7 +88,8 @@ public Contest getContestById(Long id) {
     public Contest updateContest(Long id, Contest updatedContest) {
         Contest contest = contestRepository.findById(id)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
                                 "Contest not found with id: " + id
                         )
                 );
@@ -114,7 +122,8 @@ public Contest getContestById(Long id) {
 public void deleteContest(Long id) {
     Contest contest = contestRepository.findById(id)
             .orElseThrow(() ->
-                    new RuntimeException(
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
                             "Contest not found with id: " + id
                     )
             );

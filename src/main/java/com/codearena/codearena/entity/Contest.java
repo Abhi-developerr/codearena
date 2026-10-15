@@ -2,6 +2,9 @@ package com.codearena.codearena.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "contests")
@@ -11,17 +14,22 @@ public class Contest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 150)
-    private String title;
+   @NotBlank(message = "Contest title is required")
+@Size(max = 150, message = "Title cannot exceed 150 characters")
+@Column(nullable = false, length = 150)
+private String title;
 
-    @Column(length = 1000)
-    private String description;
+    @Size(max = 1000, message = "Description cannot exceed 1000 characters")
+@Column(length = 1000)
+private String description;
 
-    @Column(nullable = false)
-    private LocalDateTime startTime;
+    @NotNull(message = "Contest start time is required")
+@Column(nullable = false)
+private LocalDateTime startTime;
 
-    @Column(nullable = false)
-    private LocalDateTime endTime;
+@NotNull(message = "Contest end time is required")
+@Column(nullable = false)
+private LocalDateTime endTime;
 
     @Column(nullable = false)
     private boolean published = false;
