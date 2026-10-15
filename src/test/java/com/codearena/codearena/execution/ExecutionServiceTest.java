@@ -10,6 +10,14 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.service.SubmissionService;
 import java.util.Optional;
+import com.codearena.codearena.entity.ProblemTestCase;
+import com.codearena.codearena.entity.SubmissionLanguage;
+import com.codearena.codearena.model.SandboxErrorType;
+import com.codearena.codearena.model.TestCaseExecutionResult;
+import java.util.List;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,7 +26,6 @@ import com.codearena.codearena.entity.SubmissionVerdict;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ExecutionServiceTest {
@@ -80,7 +87,6 @@ void executeSubmissionDoesNotContinueWhenMarkAsRunningFails() {
     verifyNoInteractions(testCaseRunner);
 }
 
-
 @Test
 void executeSubmissionHandlesTestCaseFetchFailure() {
     Long submissionId = 10L;
@@ -117,5 +123,77 @@ void executeSubmissionHandlesTestCaseFetchFailure() {
     verifyNoInteractions(testCaseRunner);
 }
 
+@Test
+void executeSubmissionDoesNotRetryAsRuntimeErrorWhenSuccessUpdateFails() {
+    Long submissionId = 10L;
+
+    Problem problem = new Problem();
+    problem.setId(1L);
+
+    Submission submission = new Submission();
+    submission.setStatus(SubmissionStatus.QUEUED);
+    submission.setProblem(problem);
+    submission.setLanguage(SubmissionLanguage.JAVA);
+    submission.setSourceCode("class Main {}");
+
+    ProblemTestCase testCase = new ProblemTestCase();
+    testCase.setId(1L);
+    testCase.setInput("1");
+    testCase.setExpectedOutput("1");
+
+    when(submissionRepository.findById(submissionId))
+            .thenReturn(Optional.of(submission));
+
+    when(problemTestCaseRepository.findByProblemId(1L))
+            .thenReturn(List.of(testCase));
+
+    org.mockito.Mockito.doNothing()
+            .when(submissionService).markAsRunning(submissionId);
+
+    TestCaseExecutionResult passedResult = new TestCaseExecutionResult(
+            1L,
+            true,
+            10L,
+            20L,
+            "1",
+            null,
+            SandboxErrorType.NONE
+    );
+
+    when(testCaseRunner.run(any(), any()))
+            .thenReturn(passedResult);
+
+    doThrow(new RuntimeException("Database update failed"))
+            .when(submissionService).updateExecutionResult(
+                    submissionId,
+                    SubmissionStatus.COMPLETED,
+                    SubmissionVerdict.ACCEPTED,
+                    10L,
+                    20L
+            );
+
+    assertThrows(
+            RuntimeException.class,
+            () -> executionService.executeSubmission(submissionId)
+    );
+
+    verify(submissionService).markAsRunning(submissionId);
+
+    verify(submissionService).updateExecutionResult(
+            submissionId,
+            SubmissionStatus.COMPLETED,
+            SubmissionVerdict.ACCEPTED,
+            10L,
+            20L
+    );
+
+    verify(submissionService, never()).updateExecutionResult(
+            submissionId,
+            SubmissionStatus.COMPLETED,
+            SubmissionVerdict.RUNTIME_ERROR,
+            0L,
+            0L
+    );
+}
 
 }

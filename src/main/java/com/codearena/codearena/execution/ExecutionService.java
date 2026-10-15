@@ -3,12 +3,10 @@ package com.codearena.codearena.execution;
 import com.codearena.codearena.repository.ProblemTestCaseRepository;
 import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.service.SubmissionService;
-
 import java.util.ArrayList;
 import com.codearena.codearena.entity.SubmissionVerdict;
 import com.codearena.codearena.model.ExecutionResult;
 import com.codearena.codearena.model.SandboxErrorType;
-
 import java.util.List;
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
@@ -16,8 +14,6 @@ import com.codearena.codearena.entity.ProblemTestCase;
 import com.codearena.codearena.exception.SubmissionNotFoundException;
 import com.codearena.codearena.model.ExecutionRequest;
 import com.codearena.codearena.model.TestCaseExecutionResult;
-
-
 import org.springframework.stereotype.Service;
 
 @Service
@@ -88,7 +84,6 @@ public class ExecutionService {
             results
     );
 }
-
     public ExecutionRequest createExecutionRequest(Long submissionId) {
 
     Submission submission = submissionRepository.findById(submissionId)
@@ -172,16 +167,14 @@ private SubmissionVerdict determineVerdict(
     return SubmissionVerdict.ACCEPTED;
 }
 
-
-
 public ExecutionResult executeSubmission(Long submissionId) {
     Submission submission = submissionRepository.findById(submissionId)
             .orElseThrow(() ->
                     new SubmissionNotFoundException("Submission not found"));
 
-    // Keep this outside try-catch.
-    // If marking as RUNNING fails, do not attempt completion.
     submissionService.markAsRunning(submissionId);
+
+    ExecutionResult result;
 
     try {
         ExecutionRequest request = new ExecutionRequest(
@@ -190,21 +183,10 @@ public ExecutionResult executeSubmission(Long submissionId) {
                 submission.getSourceCode()
         );
 
-        // Test-case fetching is now inside try-catch.
         List<ProblemTestCase> testCases =
                 getTestCases(submission.getProblem().getId());
 
-        ExecutionResult result = execute(request, testCases);
-
-        submissionService.updateExecutionResult(
-                submissionId,
-                SubmissionStatus.COMPLETED,
-                result.getVerdict(),
-                result.getExecutionTime(),
-                result.getMemoryUsed()
-        );
-
-        return result;
+        result = execute(request, testCases);
 
     } catch (Exception exception) {
         try {
@@ -222,6 +204,16 @@ public ExecutionResult executeSubmission(Long submissionId) {
 
         throw exception;
     }
+
+    submissionService.updateExecutionResult(
+            submissionId,
+            SubmissionStatus.COMPLETED,
+            result.getVerdict(),
+            result.getExecutionTime(),
+            result.getMemoryUsed()
+    );
+
+    return result;
 }
 
     private long calculateMaxMemoryUsed(
@@ -254,5 +246,7 @@ private String findErrorMessage(
 
     return null;
 }
+
+
 
 }
