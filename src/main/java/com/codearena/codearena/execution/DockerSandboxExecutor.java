@@ -5,6 +5,8 @@ import com.codearena.codearena.model.SandboxLimits;
 import com.codearena.codearena.model.SandboxErrorType;
 import com.codearena.codearena.config.SandboxProperties;
 import com.codearena.codearena.exception.SandboxTimeoutException;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.model.Statistics;
 import java.util.concurrent.atomic.AtomicLong;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.InspectExecResponse;
@@ -125,6 +127,33 @@ try {
                 SandboxErrorType.RUNTIME_ERROR
         );
     }
+    AtomicLong peakMemoryBytes = new AtomicLong(0L);
+
+ResultCallback.Adapter<Statistics> memoryCallback =
+        startMemoryMonitoring(containerId, peakMemoryBytes);
+
+try {
+    long startTime = System.nanoTime();
+
+    ExecCommandResult executionResult =
+            executeCompiledCode(containerId);
+
+    long endTime = System.nanoTime();
+
+    long executionTimeMs =
+            (endTime - startTime) / 1_000_000;
+
+    long memoryUsedMb =
+            toMegabytes(peakMemoryBytes.get());
+
+    // Existing result-handling logic continues here.
+} finally {
+    try {
+        memoryCallback.close();
+    } catch (Exception ignored) {
+        // Do not hide the original execution result.
+    }
+}
 
     boolean success =
             executionResult.getExitCode() == 0;
@@ -160,14 +189,15 @@ try {
 }
 
 private void updatePeakMemory(
-        com.github.dockerjava.api.model.Statistics statistics,
-        java.util.concurrent.atomic.AtomicLong peakMemoryBytes) {
+        Statistics statistics,
+        AtomicLong peakMemoryBytes) {
 
     if (statistics == null || statistics.getMemoryStats() == null) {
         return;
     }
 
-    Object usageValue = statistics.getMemoryStats().get("usage");
+    Object usageValue =
+            statistics.getMemoryStats().get("usage");
 
     if (usageValue instanceof Number) {
         long usageBytes = ((Number) usageValue).longValue();
@@ -513,5 +543,29 @@ private long elapsedMillis(long startTimeNanos) {
             System.nanoTime() - startTimeNanos
     );
 }
+
+private com.github.dockerjava.api.async.ResultCallback.Adapter<
+        com.github.dockerjava.api.model.Statistics> startMemoryMonitoring(
+        String containerId,
+        AtomicLong peakMemoryBytes) {
+
+    var callback =
+            new com.github.dockerjava.api.async.ResultCallback.Adapter<
+                    com.github.dockerjava.api.model.Statistics>() {
+
+                @Override
+                public void onNext(
+                        com.github.dockerjava.api.model.Statistics statistics) {
+
+                    updatePeakMemory(statistics, peakMemoryBytes);
+                }
+            };
+
+    dockerClient.statsCmd(containerId).exec(callback);
+
+    return callback;
+}
+
+
 
 }
