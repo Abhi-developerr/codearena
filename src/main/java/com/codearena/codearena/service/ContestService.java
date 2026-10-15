@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import com.codearena.codearena.dto.ContestRequest;
 
 import java.util.List;
 
@@ -48,26 +49,26 @@ public Contest getContestById(Long id) {
     return contest;
 }
 
-    @Transactional
-    public Contest createContest(Contest contest) {
-        if (contest.getStartTime() == null
-                || contest.getEndTime() == null) {
-            throw new IllegalArgumentException(
-                    "Contest start time and end time are required"
-            );
-        }
+  
+@Transactional
+public Contest createContest(ContestRequest request) {
+    if (!request.getEndTime().isAfter(request.getStartTime())) {
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Contest end time must be after start time"
+        );
+    }
 
-       if (!contest.getEndTime().isAfter(contest.getStartTime())) {
-    throw new ResponseStatusException(
-            HttpStatus.BAD_REQUEST,
-            "Contest end time must be after start time"
-    );
+    Contest contest = new Contest();
+    contest.setTitle(request.getTitle());
+    contest.setDescription(request.getDescription());
+    contest.setStartTime(request.getStartTime());
+    contest.setEndTime(request.getEndTime());
+    contest.setPublished(false);
+
+    return contestRepository.save(contest);
 }
 
-        contest.setPublished(false);
-
-        return contestRepository.save(contest);
-    }
 
 
     @Transactional

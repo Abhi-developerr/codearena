@@ -1,6 +1,7 @@
 package com.codearena.codearena.controller;
 
 import com.codearena.codearena.dto.ContestRegistrationResponse;
+import com.codearena.codearena.dto.ContestRequest;
 import com.codearena.codearena.entity.Contest;
 import com.codearena.codearena.entity.ContestRegistration;
 import com.codearena.codearena.service.ContestService;
@@ -44,10 +45,10 @@ public class ContestController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Contest> createContest(
-          @Valid @RequestBody Contest contest) {
+            @Valid @RequestBody ContestRequest request) {
 
         Contest createdContest =
-                contestService.createContest(contest);
+                contestService.createContest(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
