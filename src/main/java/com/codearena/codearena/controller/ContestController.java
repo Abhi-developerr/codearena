@@ -57,7 +57,34 @@ public ResponseEntity<Contest> publishContest(
 
     return ResponseEntity.ok(publishedContest);
 }
+@GetMapping("/admin")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<List<Contest>> getAllContestsForAdmin() {
+    return ResponseEntity.ok(
+            contestService.getAllContestsForAdmin()
+    );
+}
 
+@PutMapping("/{id}")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<Contest> updateContest(
+        @PathVariable Long id,
+        @RequestBody Contest contest) {
+    return ResponseEntity.ok(
+            contestService.updateContest(id, contest)
+    );
+}
+
+
+@DeleteMapping("/{id}")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<Void> deleteContest(
+        @PathVariable Long id) {
+
+    contestService.deleteContest(id);
+
+    return ResponseEntity.noContent().build();
+}
 
 
 }

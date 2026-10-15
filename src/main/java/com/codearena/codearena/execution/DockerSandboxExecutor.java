@@ -162,18 +162,17 @@ if (memoryLimitExceeded) {
     errorType = SandboxErrorType.RUNTIME_ERROR;
 }
 
-    boolean success =
-            executionResult.getExitCode() == 0;
-
     return new SandboxExecutionResult(
             success,
             executionResult.getStdout(),
-            success ? null : executionResult.getStderr(),
+            success
+                    ? null
+                    : memoryLimitExceeded
+                            ? "Memory limit exceeded"
+                            : executionResult.getStderr(),
             elapsedMillis(startTime),
             toMegabytes(peakMemoryBytes.get()),
-            success
-                    ? SandboxErrorType.NONE
-                    : SandboxErrorType.RUNTIME_ERROR
+            errorType
     );
 
 } catch (SandboxTimeoutException exception) {
@@ -192,6 +191,18 @@ if (memoryLimitExceeded) {
         if (containerId != null) {
             removeContainer(containerId);
         }
+    }
+}
+
+private boolean wasContainerOomKilled(String containerId) {
+    try {
+        var state = dockerClient.inspectContainerCmd(containerId)
+                .exec()
+                .getState();
+        return state != null && Boolean.TRUE.equals(state.getOOMKilled());
+    } catch (RuntimeException exception) {
+        logger.warn("Unable to inspect sandbox container OOM status", exception);
+        return false;
     }
 }
 

@@ -2,6 +2,7 @@ package com.codearena.codearena.service;
 
 import com.codearena.codearena.entity.Contest;
 import com.codearena.codearena.repository.ContestRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,10 +18,13 @@ public class ContestService {
         this.contestRepository = contestRepository;
     }
 
-    
-public List<Contest> getAllContests() {
-    return contestRepository.findByPublishedTrue();
-}
+    public List<Contest> getAllContests() {
+        return contestRepository.findByPublishedTrue();
+    }
+
+    public List<Contest> getAllContestsForAdmin() {
+        return contestRepository.findAll();
+    }
 
 
 public Contest getContestById(Long id) {
@@ -59,8 +63,8 @@ public Contest getContestById(Long id) {
     }
 
 
-@Transactional
-public Contest publishContest(Long id) {
+    @Transactional
+    public Contest publishContest(Long id) {
     Contest contest = contestRepository.findById(id)
             .orElseThrow(() ->
                     new RuntimeException(
@@ -71,8 +75,52 @@ public Contest publishContest(Long id) {
     contest.setPublished(true);
 
     return contestRepository.save(contest);
-}
+    }
 
+    @Transactional
+    public Contest updateContest(Long id, Contest updatedContest) {
+        Contest contest = contestRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Contest not found with id: " + id
+                        )
+                );
+
+        if (updatedContest.getTitle() != null) {
+            contest.setTitle(updatedContest.getTitle());
+        }
+        if (updatedContest.getDescription() != null) {
+            contest.setDescription(updatedContest.getDescription());
+        }
+        if (updatedContest.getStartTime() != null) {
+            contest.setStartTime(updatedContest.getStartTime());
+        }
+        if (updatedContest.getEndTime() != null) {
+            contest.setEndTime(updatedContest.getEndTime());
+        }
+        if (contest.getStartTime() == null
+                || contest.getEndTime() == null
+                || !contest.getEndTime().isAfter(contest.getStartTime())) {
+            throw new IllegalArgumentException(
+                    "Contest end time must be after start time"
+            );
+        }
+
+        return contestRepository.save(contest);
+    }
+
+
+@Transactional
+public void deleteContest(Long id) {
+    Contest contest = contestRepository.findById(id)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "Contest not found with id: " + id
+                    )
+            );
+
+    contestRepository.delete(contest);
+}
 
 
 }
