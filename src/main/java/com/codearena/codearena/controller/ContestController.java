@@ -6,6 +6,7 @@ import com.codearena.codearena.entity.Contest;
 import com.codearena.codearena.entity.ContestRegistration;
 import com.codearena.codearena.service.ContestService;
 import com.codearena.codearena.service.ContestRegistrationService;
+import com.codearena.codearena.dto.ContestResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -42,18 +43,26 @@ public class ContestController {
                 contestService.getContestById(id)
         );
     }
-    @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
-    public ResponseEntity<Contest> createContest(
-            @Valid @RequestBody ContestRequest request) {
+      
+@PostMapping
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<ContestResponse> createContest(
+        @Valid @RequestBody ContestRequest request) {
 
-        Contest createdContest =
-                contestService.createContest(request);
+    Contest contest = contestService.createContest(request);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(createdContest);
-    }
+    ContestResponse response = new ContestResponse(
+            contest.getId(),
+            contest.getTitle(),
+            contest.getDescription(),
+            contest.getStartTime(),
+            contest.getEndTime(),
+            contest.isPublished()
+    );
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body(response);
+}
 
 @PostMapping("/{id}/publish")
 @PreAuthorize("hasRole('ADMIN')")
@@ -74,13 +83,22 @@ public ResponseEntity<List<Contest>> getAllContestsForAdmin() {
 
 @PutMapping("/{id}")
 @PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<Contest> updateContest(
+public ResponseEntity<ContestResponse> updateContest(
         @PathVariable Long id,
         @Valid @RequestBody ContestRequest request) {
 
-    Contest updatedContest = contestService.updateContest(id, request);
+    Contest contest = contestService.updateContest(id, request);
 
-    return ResponseEntity.ok(updatedContest);
+    ContestResponse response = new ContestResponse(
+            contest.getId(),
+            contest.getTitle(),
+            contest.getDescription(),
+            contest.getStartTime(),
+            contest.getEndTime(),
+            contest.isPublished()
+    );
+
+    return ResponseEntity.ok(response);
 }
 
 @GetMapping("/{id}/registrations/count")
