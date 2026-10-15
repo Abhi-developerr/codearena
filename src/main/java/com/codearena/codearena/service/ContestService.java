@@ -3,9 +3,6 @@ package com.codearena.codearena.service;
 import com.codearena.codearena.entity.Contest;
 import com.codearena.codearena.repository.ContestRegistrationRepository;
 import com.codearena.codearena.repository.ContestRepository;
-
-import jakarta.validation.Valid;
-
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -90,6 +87,19 @@ if (!LocalDateTime.now().isBefore(contest.getStartTime())) {
     );
 }
 
+if (contest.isArchived()) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Archived contests cannot be published"
+    );
+}
+if (contest.isPublished()) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Contest is already published"
+    );
+}
+
     contest.setPublished(true);
 
     return contestRepository.save(contest);
@@ -104,6 +114,23 @@ public Contest updateContest(Long id, ContestRequest request) {
                             "Contest not found with id: " + id
                     )
             );
+
+
+if (contest.isArchived()) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Archived contests cannot be updated"
+    );
+}
+
+if (contest.isPublished()
+        && !LocalDateTime.now().isBefore(request.getStartTime())) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "A published contest must have a future start time"
+    );
+}
+
 
     if (!request.getEndTime().isAfter(request.getStartTime())) {
         throw new ResponseStatusException(
@@ -149,6 +176,13 @@ public Contest archiveContest(Long id) {
                             "Contest not found"
                     )
             );
+
+            if (contest.isArchived()) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Contest is already archived"
+    );
+}
 
     contest.setArchived(true);
     contest.setPublished(false);

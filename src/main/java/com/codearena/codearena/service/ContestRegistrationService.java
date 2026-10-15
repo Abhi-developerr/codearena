@@ -6,6 +6,7 @@ import com.codearena.codearena.entity.ContestRegistration;
 import com.codearena.codearena.repository.ContestRegistrationRepository;
 import com.codearena.codearena.repository.ContestRepository;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
@@ -28,26 +29,26 @@ public class ContestRegistrationService {
     @Transactional
     public ContestRegistration registerUser(
             Long contestId, Long userId) {
- 
-                    Contest contest = contestRepository.findById(contestId)
-                    .orElseThrow(() ->
+
+        Contest contest = contestRepository.findById(contestId)
+                .orElseThrow(() ->
                     new ResponseStatusException(
                             HttpStatus.NOT_FOUND,
                             "Contest not found"
                         )
                 );
-                
-                if (!LocalDateTime.now().isBefore(contest.getStartTime())) {
-                    throw new ResponseStatusException(
-                            HttpStatus.CONFLICT,
-                            "Registration is closed because the contest has started"
-                    );
-                }
 
-        if (!contest.isPublished()) {
+        if (!contest.isPublished() || contest.isArchived()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
                     "Contest not found"
+            );
+        }
+
+        if (!LocalDateTime.now().isBefore(contest.getStartTime())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Registration is closed because the contest has started"
             );
         }
 
@@ -65,7 +66,15 @@ public class ContestRegistrationService {
         registration.setContest(contest);
         registration.setUserId(userId);
 
-        return registrationRepository.save(registration);
+        try {
+            return registrationRepository.saveAndFlush(registration);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "User is already registered for this contest",
+                    exception
+            );
+        }
     }
 
 @Transactional(readOnly = true)
