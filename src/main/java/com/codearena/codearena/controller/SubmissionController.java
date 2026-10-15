@@ -5,7 +5,6 @@ import com.codearena.codearena.dto.SubmissionRequest;
 import com.codearena.codearena.dto.SubmissionResponse;
 import com.codearena.codearena.service.SubmissionService;
 import com.codearena.codearena.security.CustomUserDetails;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -17,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Page;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -241,8 +239,6 @@ public SubmissionCodeResponse getSubmissionCode(
     );
 }
 
-
-
 @GetMapping("/problems/{problemId}/submissions")
 @Operation(
     summary = "Get my submissions for a problem",
@@ -304,5 +300,4 @@ private void validateSort(Pageable pageable) {
         }
     });
 }
-
 }

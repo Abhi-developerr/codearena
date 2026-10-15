@@ -196,4 +196,55 @@ void executeSubmissionDoesNotRetryAsRuntimeErrorWhenSuccessUpdateFails() {
     );
 }
 
+@Test
+void executeSubmissionPreservesOriginalExceptionWhenErrorUpdateFails() {
+    Long submissionId = 10L;
+
+    Problem problem = new Problem();
+    problem.setId(1L);
+
+    Submission submission = new Submission();
+    submission.setStatus(SubmissionStatus.QUEUED);
+    submission.setProblem(problem);
+
+    when(submissionRepository.findById(submissionId))
+            .thenReturn(Optional.of(submission));
+
+    RuntimeException executionException =
+            new RuntimeException("Test case database error");
+
+    RuntimeException updateException =
+            new RuntimeException("Failed to save runtime error");
+
+    when(problemTestCaseRepository.findByProblemId(1L))
+            .thenThrow(executionException);
+
+    org.mockito.Mockito.doNothing()
+            .when(submissionService).markAsRunning(submissionId);
+
+    doThrow(updateException)
+            .when(submissionService).updateExecutionResult(
+                    submissionId,
+                    SubmissionStatus.COMPLETED,
+                    SubmissionVerdict.RUNTIME_ERROR,
+                    0L,
+                    0L
+            );
+
+    RuntimeException thrown = assertThrows(
+            RuntimeException.class,
+            () -> executionService.executeSubmission(submissionId)
+    );
+
+    org.junit.jupiter.api.Assertions.assertSame(
+            updateException,
+            thrown
+    );
+
+    org.junit.jupiter.api.Assertions.assertSame(
+            executionException,
+            thrown.getSuppressed()[0]
+    );
+}
+
 }

@@ -7,7 +7,6 @@ import com.codearena.codearena.entity.ProblemTestCase;
 import com.codearena.codearena.repository.ProblemRepository;
 import com.codearena.codearena.repository.ProblemTestCaseRepository;
 import com.codearena.codearena.exception.ProblemTestCaseOwnershipException;
-import com.codearena.codearena.exception.ProblemNotFoundException;
 import com.codearena.codearena.dto.ProblemTestCaseRequest;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
