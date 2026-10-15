@@ -1,6 +1,7 @@
 package com.codearena.codearena.service;
 
 import com.codearena.codearena.entity.Contest;
+import com.codearena.codearena.repository.ContestRegistrationRepository;
 import com.codearena.codearena.repository.ContestRepository;
 
 import jakarta.validation.Valid;
@@ -19,9 +20,11 @@ import java.util.List;
 public class ContestService {
 
     private final ContestRepository contestRepository;
+    private final ContestRegistrationRepository registrationRepository;
 
-    public ContestService(ContestRepository contestRepository) {
+    public ContestService(ContestRepository contestRepository, ContestRegistrationRepository registrationRepository) {
         this.contestRepository = contestRepository;
+        this.registrationRepository = registrationRepository;
     }
 
     public List<Contest> getAllContests() {
@@ -31,7 +34,6 @@ public class ContestService {
     public List<Contest> getAllContestsForAdmin() {
         return contestRepository.findAll();
     }
-
 
 public Contest getContestById(Long id) {
     Contest contest = contestRepository.findById(id)
@@ -125,12 +127,18 @@ public void deleteContest(Long id) {
             .orElseThrow(() ->
                     new ResponseStatusException(
                             HttpStatus.NOT_FOUND,
-                            "Contest not found with id: " + id
+                            "Contest not found"
                     )
             );
 
+    if (registrationRepository.existsByContestId(id)) {
+        throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Cannot delete a contest that has registrations"
+        );
+    }
+
     contestRepository.delete(contest);
 }
-
 
 }

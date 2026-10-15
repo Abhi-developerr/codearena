@@ -15,10 +15,12 @@ public interface ContestRegistrationRepository
     List<ContestRegistration> findByUserId(Long userId);
     List<ContestRegistration> findByContestId(Long contestId);
 
-long countByContestId(Long contestId);
+    long countByContestId(Long contestId);
 
-Optional<ContestRegistration> findByContestIdAndUserId(
+    Optional<ContestRegistration> findByContestIdAndUserId(
         Long contestId, Long userId);
+
+    boolean existsByContestId(Long contestId);
 
 
 }
