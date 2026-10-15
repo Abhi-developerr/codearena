@@ -3,12 +3,12 @@ package com.codearena.codearena.controller;
 import com.codearena.codearena.entity.Contest;
 import com.codearena.codearena.entity.ContestRegistration;
 import com.codearena.codearena.service.ContestService;
+import com.codearena.codearena.service.ContestRegistrationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
-import com.codearena.codearena.entity.ContestRegistration;
 
 import java.util.List;
 
@@ -17,9 +17,13 @@ import java.util.List;
 public class ContestController {
 
     private final ContestService contestService;
+    private final ContestRegistrationService contestRegistrationService;
 
-    public ContestController(ContestService contestService) {
+    public ContestController(
+            ContestService contestService,
+            ContestRegistrationService contestRegistrationService) {
         this.contestService = contestService;
+        this.contestRegistrationService = contestRegistrationService;
     }
 
     @GetMapping

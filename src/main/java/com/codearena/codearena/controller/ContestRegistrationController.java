@@ -2,6 +2,7 @@
 package com.codearena.codearena.controller;
 
 import com.codearena.codearena.entity.ContestRegistration;
+import com.codearena.codearena.dto.ContestRegistrationResponse;
 import com.codearena.codearena.security.CustomUserDetails;
 import com.codearena.codearena.service.ContestRegistrationService;
 
@@ -21,21 +22,29 @@ public class ContestRegistrationController {
         this.registrationService = registrationService;
     }
 
-    @PostMapping("/{contestId}/register")
-    public ResponseEntity<ContestRegistration> registerForContest(
-            @PathVariable Long contestId,
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+   
+@PostMapping("/{contestId}/register")
+public ResponseEntity<ContestRegistrationResponse> registerForContest(
+        @PathVariable Long contestId,
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        ContestRegistration registration =
-                registrationService.registerUser(
-                        contestId,
-                        userDetails.getId()
-                );
+    ContestRegistration registration =
+            registrationService.registerUser(
+                    contestId,
+                    userDetails.getId()
+            );
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(registration);
-    }
+    ContestRegistrationResponse response =
+            new ContestRegistrationResponse(
+                    registration.getId(),
+                    registration.getContest().getId(),
+                    registration.getUserId(),
+                    registration.getRegisteredAt()
+            );
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+            .body(response);
+}
 
 @GetMapping("/my-registrations")
 public ResponseEntity<java.util.List<ContestRegistration>>
