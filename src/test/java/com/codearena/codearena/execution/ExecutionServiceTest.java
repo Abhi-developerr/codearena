@@ -1,25 +1,21 @@
-
 package com.codearena.codearena.execution;
 
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.exception.SubmissionNotFoundException;
 import com.codearena.codearena.repository.ProblemTestCaseRepository;
+import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.entity.SubmissionStatus;
-
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.service.SubmissionService;
-
 import java.util.Optional;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import com.codearena.codearena.entity.SubmissionVerdict;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
@@ -59,7 +55,6 @@ class ExecutionServiceTest {
                 .markAsRunning(submissionId);
     }
 
-
 @Test
 void executeSubmissionDoesNotContinueWhenMarkAsRunningFails() {
 
@@ -85,34 +80,42 @@ void executeSubmissionDoesNotContinueWhenMarkAsRunningFails() {
     verifyNoInteractions(testCaseRunner);
 }
 
+
 @Test
 void executeSubmissionHandlesTestCaseFetchFailure() {
-
     Long submissionId = 10L;
+
+    Problem problem = new Problem();
+    problem.setId(1L);
 
     Submission submission = new Submission();
     submission.setStatus(SubmissionStatus.QUEUED);
+    submission.setProblem(problem);
 
     when(submissionRepository.findById(submissionId))
             .thenReturn(Optional.of(submission));
 
+    when(problemTestCaseRepository.findByProblemId(1L))
+            .thenThrow(new RuntimeException("Database error"));
+
     org.mockito.Mockito.doNothing()
-            .when(submissionService)
-            .markAsRunning(submissionId);
+            .when(submissionService).markAsRunning(submissionId);
 
-    org.mockito.Mockito.when(
-            problemTestCaseRepository.findByProblemId(
-                    org.mockito.ArgumentMatchers.anyLong()
-            )
-    ).thenThrow(new RuntimeException("Database error"));
-
-    assertThrows(
-            RuntimeException.class,
-            () -> executionService.executeSubmission(submissionId)
-    );
+    assertThrows(RuntimeException.class,
+            () -> executionService.executeSubmission(submissionId));
 
     verify(submissionService).markAsRunning(submissionId);
+
+    verify(submissionService).updateExecutionResult(
+            submissionId,
+            SubmissionStatus.COMPLETED,
+            SubmissionVerdict.RUNTIME_ERROR,
+            0L,
+            0L
+    );
+
     verifyNoInteractions(testCaseRunner);
 }
+
 
 }

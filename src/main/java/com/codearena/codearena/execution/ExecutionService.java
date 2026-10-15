@@ -173,27 +173,27 @@ private SubmissionVerdict determineVerdict(
 }
 
 
-public ExecutionResult executeSubmission(Long submissionId) {
 
+public ExecutionResult executeSubmission(Long submissionId) {
     Submission submission = submissionRepository.findById(submissionId)
             .orElseThrow(() ->
-                    new SubmissionNotFoundException(
-                            "Submission not found"
-                    )
-            );
+                    new SubmissionNotFoundException("Submission not found"));
 
+    // Keep this outside try-catch.
+    // If marking as RUNNING fails, do not attempt completion.
     submissionService.markAsRunning(submissionId);
 
-    ExecutionRequest request = new ExecutionRequest(
-            submission.getId(),
-            submission.getLanguage(),
-            submission.getSourceCode()
-    );
-
-    List<ProblemTestCase> testCases =
-            getTestCases(submission.getProblem().getId());
-
     try {
+        ExecutionRequest request = new ExecutionRequest(
+                submission.getId(),
+                submission.getLanguage(),
+                submission.getSourceCode()
+        );
+
+        // Test-case fetching is now inside try-catch.
+        List<ProblemTestCase> testCases =
+                getTestCases(submission.getProblem().getId());
+
         ExecutionResult result = execute(request, testCases);
 
         submissionService.updateExecutionResult(
