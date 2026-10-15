@@ -173,23 +173,6 @@ try {
     }
 }
 
-private boolean wasContainerOomKilled(String containerId) {
-    try {
-        var containerInfo = dockerClient
-                .inspectContainerCmd(containerId)
-                .exec();
-
-        return containerInfo.getState() != null
-                && Boolean.TRUE.equals(
-                        containerInfo.getState().getOOMKilled()
-                );
-
-    } catch (Exception exception) {
-        // Inspection failure must not hide the original result.
-        return false;
-    }
-}
-
 private void updatePeakMemory(
         Statistics statistics,
         AtomicLong peakMemoryBytes) {
