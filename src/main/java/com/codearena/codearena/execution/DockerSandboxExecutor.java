@@ -140,6 +140,28 @@ try {
         );
     }
 
+    boolean oomKilled = wasContainerOomKilled(containerId);
+
+boolean memoryLimitExceeded =
+        oomKilled
+        || (executionResult.getExitCode() != null
+            && executionResult.getExitCode() == 137);
+
+boolean success =
+        executionResult.getExitCode() != null
+        && executionResult.getExitCode() == 0
+        && !memoryLimitExceeded;
+
+SandboxErrorType errorType;
+
+if (memoryLimitExceeded) {
+    errorType = SandboxErrorType.MEMORY_LIMIT_EXCEEDED;
+} else if (success) {
+    errorType = SandboxErrorType.NONE;
+} else {
+    errorType = SandboxErrorType.RUNTIME_ERROR;
+}
+
     boolean success =
             executionResult.getExitCode() == 0;
 

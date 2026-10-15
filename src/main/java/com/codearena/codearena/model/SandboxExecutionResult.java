@@ -73,7 +73,6 @@ public class SandboxExecutionResult {
     }
  
     public void setErrorType(SandboxErrorType errorType) {
-    this.errorType = errorType;
-}
-
+        this.errorType = errorType;
+    }
 }
