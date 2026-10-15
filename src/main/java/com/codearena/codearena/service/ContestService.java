@@ -17,16 +17,26 @@ public class ContestService {
         this.contestRepository = contestRepository;
     }
 
-    public List<Contest> getAllContests() {
-        return contestRepository.findAll();
+    
+public List<Contest> getAllContests() {
+    return contestRepository.findByPublishedTrue();
+}
+
+
+public Contest getContestById(Long id) {
+    Contest contest = contestRepository.findById(id)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "Contest not found with id: " + id
+                    )
+            );
+
+    if (!contest.isPublished()) {
+        throw new RuntimeException("Contest not found with id: " + id);
     }
 
-    public Contest getContestById(Long id) {
-        return contestRepository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Contest not found with id: " + id)
-                );
-    }
+    return contest;
+}
 
     @Transactional
     public Contest createContest(Contest contest) {
