@@ -47,15 +47,28 @@ public ResponseEntity<ContestRegistrationResponse> registerForContest(
 }
 
 @GetMapping("/my-registrations")
-public ResponseEntity<java.util.List<ContestRegistration>>
+public ResponseEntity<java.util.List<ContestRegistrationResponse>>
         getMyRegistrations(
         @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-    return ResponseEntity.ok(
+    java.util.List<ContestRegistration> registrations =
             registrationService.getMyRegistrations(
                     userDetails.getId()
-            )
-    );
+            );
+
+    java.util.List<ContestRegistrationResponse> response =
+            registrations.stream()
+                    .map(registration ->
+                            new ContestRegistrationResponse(
+                                    registration.getId(),
+                                    registration.getContest().getId(),
+                                    registration.getUserId(),
+                                    registration.getRegisteredAt()
+                            )
+                    )
+                    .toList();
+
+    return ResponseEntity.ok(response);
 }
 
 @DeleteMapping("/{contestId}/register")
