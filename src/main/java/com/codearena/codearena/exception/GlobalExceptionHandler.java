@@ -3,7 +3,7 @@ package com.codearena.codearena.exception;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -116,6 +116,22 @@ public ResponseEntity<ErrorResponse> handleInvalidPassword(
             .status(HttpStatus.BAD_REQUEST)
             .body(error);
 }
+
+@ExceptionHandler(AuthorizationDeniedException.class)
+public ResponseEntity<ErrorResponse> handleAuthorizationDenied(
+        AuthorizationDeniedException exception) {
+
+    ErrorResponse error = new ErrorResponse(
+            403,
+            "Access denied",
+            null
+    );
+
+    return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(error);
+}
+
 
 @ExceptionHandler(Exception.class)
 public ResponseEntity<ErrorResponse> handleGenericException(
