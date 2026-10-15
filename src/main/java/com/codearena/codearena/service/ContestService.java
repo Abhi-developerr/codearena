@@ -57,4 +57,22 @@ public Contest getContestById(Long id) {
 
         return contestRepository.save(contest);
     }
+
+
+@Transactional
+public Contest publishContest(Long id) {
+    Contest contest = contestRepository.findById(id)
+            .orElseThrow(() ->
+                    new RuntimeException(
+                            "Contest not found with id: " + id
+                    )
+            );
+
+    contest.setPublished(true);
+
+    return contestRepository.save(contest);
+}
+
+
+
 }

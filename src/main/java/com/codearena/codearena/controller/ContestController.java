@@ -46,4 +46,18 @@ public class ContestController {
                 .status(HttpStatus.CREATED)
                 .body(createdContest);
     }
+
+
+@PostMapping("/{id}/publish")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<Contest> publishContest(
+        @PathVariable Long id) {
+
+    Contest publishedContest = contestService.publishContest(id);
+
+    return ResponseEntity.ok(publishedContest);
+}
+
+
+
 }
