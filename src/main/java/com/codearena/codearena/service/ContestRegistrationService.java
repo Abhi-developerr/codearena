@@ -32,12 +32,11 @@ public class ContestRegistrationService {
 
         Contest contest = contestRepository.findById(contestId)
                 .orElseThrow(() ->
-                    new ResponseStatusException(
-                            HttpStatus.NOT_FOUND,
-                            "Contest not found"
+                        new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Contest not found"
                         )
                 );
-
         if (!contest.isPublished() || contest.isArchived()) {
             throw new ResponseStatusException(
                     HttpStatus.NOT_FOUND,
@@ -99,6 +98,13 @@ public void cancelRegistration(Long contestId, Long userId) {
                             "Contest not found"
                     )
             );
+
+if (contest.isArchived()) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Cannot cancel registration for an archived contest"
+    );
+}
 
     if (!LocalDateTime.now().isBefore(contest.getStartTime())) {
         throw new ResponseStatusException(

@@ -32,6 +32,7 @@ public class ContestService {
         return contestRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
 public Contest getContestById(Long id) {
     Contest contest = contestRepository.findById(id)
             .orElseThrow(() ->
@@ -53,6 +54,13 @@ if (!contest.isPublished() || contest.isArchived()) {
   
 @Transactional
 public Contest createContest(ContestRequest request) {
+if (request.getStartTime() == null || request.getEndTime() == null) {
+    throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Contest start time and end time are required"
+    );
+}
+
     if (!request.getEndTime().isAfter(request.getStartTime())) {
         throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
@@ -115,6 +123,13 @@ public Contest updateContest(Long id, ContestRequest request) {
                     )
             );
 
+
+if (request.getStartTime() == null || request.getEndTime() == null) {
+    throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Contest start time and end time are required"
+    );
+}
 
 if (contest.isArchived()) {
     throw new ResponseStatusException(

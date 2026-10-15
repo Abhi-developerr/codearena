@@ -41,7 +41,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager() {
+    private AuthenticationManager authenticationManager() {
         return new ProviderManager(authenticationProvider());
 }
 
@@ -56,12 +56,12 @@ public class SecurityConfig {
 }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    private PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(
+    private SecurityFilterChain securityFilterChain(
             HttpSecurity http) throws Exception {
 
         http
