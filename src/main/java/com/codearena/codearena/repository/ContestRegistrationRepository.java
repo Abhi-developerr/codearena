@@ -21,6 +21,4 @@ public interface ContestRegistrationRepository
         Long contestId, Long userId);
 
     boolean existsByContestId(Long contestId);
-
-
 }

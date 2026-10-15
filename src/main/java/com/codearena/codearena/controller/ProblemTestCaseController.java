@@ -147,6 +147,7 @@ public ResponseEntity<Void> deleteTestCase(
 })
 @SecurityRequirement(name = "bearerAuth")
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<ProblemTestCaseResponse> getTestCases(
             @PathVariable Long problemId) {
         return problemTestCaseService.getTestCases(problemId);
