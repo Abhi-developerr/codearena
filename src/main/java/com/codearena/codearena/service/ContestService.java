@@ -57,11 +57,12 @@ public Contest getContestById(Long id) {
             );
         }
 
-        if (!contest.getEndTime().isAfter(contest.getStartTime())) {
-            throw new IllegalArgumentException(
-                    "Contest end time must be after start time"
-            );
-        }
+       if (!contest.getEndTime().isAfter(contest.getStartTime())) {
+    throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Contest end time must be after start time"
+    );
+}
 
         contest.setPublished(false);
 
