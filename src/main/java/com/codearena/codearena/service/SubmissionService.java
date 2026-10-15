@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+
 import com.codearena.codearena.exception.SubmissionNotFoundException;
 
 @Service
@@ -265,11 +267,19 @@ public void markAsRunning(Long submissionId) {
         );
     }
 
-    submission.setStatus(
-            SubmissionStatus.RUNNING
-    );
+    int claimedSubmissionCount =
+            submissionRepository.claimQueuedSubmission(
+                    submissionId,
+                    SubmissionStatus.QUEUED,
+                    SubmissionStatus.RUNNING,
+                    Instant.now()
+            );
 
-    submissionRepository.save(submission);
+    if (claimedSubmissionCount != 1) {
+        throw new IllegalArgumentException(
+                "Only queued submissions can be marked as running"
+        );
+    }
 }
 
 public Page<SubmissionResponse> getAllSubmissions(
