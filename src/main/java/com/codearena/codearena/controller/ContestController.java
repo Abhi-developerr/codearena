@@ -28,12 +28,26 @@ public class ContestController {
         this.contestRegistrationService = contestRegistrationService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Contest>> getAllContests() {
-        return ResponseEntity.ok(
-                contestService.getAllContests()
-        );
-    }
+  
+@GetMapping
+public ResponseEntity<java.util.List<ContestResponse>> getAllContests() {
+
+    java.util.List<ContestResponse> response =
+            contestService.getAllContests()
+                    .stream()
+                    .map(contest -> new ContestResponse(
+                            contest.getId(),
+                            contest.getTitle(),
+                            contest.getDescription(),
+                            contest.getStartTime(),
+                            contest.getEndTime(),
+                            contest.isPublished()
+                    ))
+                    .toList();
+
+    return ResponseEntity.ok(response);
+}
+
 
     @GetMapping("/{id}")
     public ResponseEntity<Contest> getContestById(
