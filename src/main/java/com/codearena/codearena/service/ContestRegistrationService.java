@@ -80,6 +80,51 @@ public long getRegistrationCount(Long contestId) {
     return registrationRepository.countByContestId(contestId);
 }
 
+@Transactional
+public void cancelRegistration(Long contestId, Long userId) {
+
+    Contest contest = contestRepository.findById(contestId)
+            .orElseThrow(() ->
+                    new ResponseStatusException(
+                            HttpStatus.NOT_FOUND,
+                            "Contest not found"
+                    )
+            );
+
+    if (!LocalDateTime.now().isBefore(contest.getStartTime())) {
+        throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "Registration cannot be cancelled after contest starts"
+        );
+    }
+
+    ContestRegistration registration =
+            registrationRepository
+                    .findByContestIdAndUserId(contestId, userId)
+                    .orElseThrow(() ->
+                            new ResponseStatusException(
+                                    HttpStatus.NOT_FOUND,
+                                    "Registration not found"
+                            )
+                    );
+
+    registrationRepository.delete(registration);
+}
+
+@Transactional(readOnly = true)
+public java.util.List<ContestRegistration> getRegistrationsByContest(
+        Long contestId) {
+
+    if (!contestRepository.existsById(contestId)) {
+        throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Contest not found"
+        );
+    }
+
+    return registrationRepository.findByContestId(contestId);
+}
+
 @Transactional(readOnly = true)
 public java.util.List<ContestRegistration> getMyRegistrations(
         Long userId) {

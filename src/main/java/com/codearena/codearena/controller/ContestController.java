@@ -1,12 +1,14 @@
 package com.codearena.codearena.controller;
 
 import com.codearena.codearena.entity.Contest;
+import com.codearena.codearena.entity.ContestRegistration;
 import com.codearena.codearena.service.ContestService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import com.codearena.codearena.entity.ContestRegistration;
 
 import java.util.List;
 
@@ -93,6 +95,17 @@ public ResponseEntity<Void> deleteContest(
     contestService.deleteContest(id);
 
     return ResponseEntity.noContent().build();
+}
+
+
+@GetMapping("/{id}/registrations")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<java.util.List<ContestRegistration>>
+        getContestRegistrations(@PathVariable Long id) {
+
+    return ResponseEntity.ok(
+            contestRegistrationService.getRegistrationsByContest(id)
+    );
 }
 
 

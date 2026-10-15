@@ -4,6 +4,7 @@ import com.codearena.codearena.entity.ContestRegistration;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ContestRegistrationRepository
@@ -15,5 +16,9 @@ public interface ContestRegistrationRepository
     List<ContestRegistration> findByContestId(Long contestId);
 
 long countByContestId(Long contestId);
+
+Optional<ContestRegistration> findByContestIdAndUserId(
+        Long contestId, Long userId);
+
 
 }

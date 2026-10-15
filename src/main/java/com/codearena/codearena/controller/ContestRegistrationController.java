@@ -37,7 +37,6 @@ public class ContestRegistrationController {
                 .body(registration);
     }
 
-
 @GetMapping("/my-registrations")
 public ResponseEntity<java.util.List<ContestRegistration>>
         getMyRegistrations(
@@ -50,6 +49,18 @@ public ResponseEntity<java.util.List<ContestRegistration>>
     );
 }
 
+@DeleteMapping("/{contestId}/register")
+public ResponseEntity<Void> cancelRegistration(
+        @PathVariable Long contestId,
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+    registrationService.cancelRegistration(
+            contestId,
+            userDetails.getId()
+    );
+
+    return ResponseEntity.noContent().build();
+}
 
 
 }
