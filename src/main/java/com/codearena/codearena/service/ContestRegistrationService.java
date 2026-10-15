@@ -59,4 +59,14 @@ public class ContestRegistrationService {
 
         return registrationRepository.save(registration);
     }
+
+
+@Transactional(readOnly = true)
+public java.util.List<ContestRegistration> getMyRegistrations(
+        Long userId) {
+    return registrationRepository.findByUserId(userId);
+}
+
+
+
 }
