@@ -48,15 +48,23 @@ public ResponseEntity<java.util.List<ContestResponse>> getAllContests() {
     return ResponseEntity.ok(response);
 }
 
+@GetMapping("/{id}")
+public ResponseEntity<ContestResponse> getContestById(
+        @PathVariable Long id) {
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Contest> getContestById(
-            @PathVariable Long id) {
+    Contest contest = contestService.getContestById(id);
 
-        return ResponseEntity.ok(
-                contestService.getContestById(id)
-        );
-    }
+    ContestResponse response = new ContestResponse(
+            contest.getId(),
+            contest.getTitle(),
+            contest.getDescription(),
+            contest.getStartTime(),
+            contest.getEndTime(),
+            contest.isPublished()
+    );
+
+    return ResponseEntity.ok(response);
+}
       
 @PostMapping
 @PreAuthorize("hasRole('ADMIN')")
@@ -87,12 +95,26 @@ public ResponseEntity<Contest> publishContest(
 
     return ResponseEntity.ok(publishedContest);
 }
+
 @GetMapping("/admin")
 @PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<List<Contest>> getAllContestsForAdmin() {
-    return ResponseEntity.ok(
+public ResponseEntity<java.util.List<ContestResponse>>
+        getAllContestsForAdmin() {
+
+    java.util.List<ContestResponse> response =
             contestService.getAllContestsForAdmin()
-    );
+                    .stream()
+                    .map(contest -> new ContestResponse(
+                            contest.getId(),
+                            contest.getTitle(),
+                            contest.getDescription(),
+                            contest.getStartTime(),
+                            contest.getEndTime(),
+                            contest.isPublished()
+                    ))
+                    .toList();
+
+    return ResponseEntity.ok(response);
 }
 
 @PutMapping("/{id}")
