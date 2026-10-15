@@ -78,10 +78,14 @@ class UserServiceTest {
         request.setEmail("  ABHI@example.com ");
         request.setPassword("password123");
 
-        User savedUser = userWithId(
-                user("abhi@example.com"),
-                1L
-        );
+        
+User savedUser = userWithId(
+        user("abhi@example.com"),
+        1L
+);
+
+savedUser.setName("Abhi");
+
 
         when(userRepository.existsByEmail("abhi@example.com"))
                 .thenReturn(false);
