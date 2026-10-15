@@ -114,8 +114,20 @@ if (compilationResult.getExitCode() != 0) {
 }
 
 try {
-    ExecCommandResult executionResult =
-            executeCompiledCode(containerId);
+    AtomicLong peakMemoryBytes = new AtomicLong(0L);
+    ResultCallback.Adapter<Statistics> memoryCallback =
+            startMemoryMonitoring(containerId, peakMemoryBytes);
+    ExecCommandResult executionResult;
+
+    try {
+        executionResult = executeCompiledCode(containerId);
+    } finally {
+        try {
+            memoryCallback.close();
+        } catch (Exception ignored) {
+            // Do not hide the original execution result.
+        }
+    }
 
     if (executionResult.getExitCode() == null) {
         return new SandboxExecutionResult(
@@ -123,37 +135,10 @@ try {
                 executionResult.getStdout(),
                 "Execution exit code is unavailable",
                 elapsedMillis(startTime),
-                0L,
+                toMegabytes(peakMemoryBytes.get()),
                 SandboxErrorType.RUNTIME_ERROR
         );
     }
-    AtomicLong peakMemoryBytes = new AtomicLong(0L);
-
-ResultCallback.Adapter<Statistics> memoryCallback =
-        startMemoryMonitoring(containerId, peakMemoryBytes);
-
-try {
-    long startTime = System.nanoTime();
-
-    ExecCommandResult executionResult =
-            executeCompiledCode(containerId);
-
-    long endTime = System.nanoTime();
-
-    long executionTimeMs =
-            (endTime - startTime) / 1_000_000;
-
-    long memoryUsedMb =
-            toMegabytes(peakMemoryBytes.get());
-
-    // Existing result-handling logic continues here.
-} finally {
-    try {
-        memoryCallback.close();
-    } catch (Exception ignored) {
-        // Do not hide the original execution result.
-    }
-}
 
     boolean success =
             executionResult.getExitCode() == 0;
@@ -163,7 +148,7 @@ try {
             executionResult.getStdout(),
             success ? null : executionResult.getStderr(),
             elapsedMillis(startTime),
-            0L,
+            toMegabytes(peakMemoryBytes.get()),
             success
                     ? SandboxErrorType.NONE
                     : SandboxErrorType.RUNTIME_ERROR
@@ -188,6 +173,23 @@ try {
     }
 }
 
+private boolean wasContainerOomKilled(String containerId) {
+    try {
+        var containerInfo = dockerClient
+                .inspectContainerCmd(containerId)
+                .exec();
+
+        return containerInfo.getState() != null
+                && Boolean.TRUE.equals(
+                        containerInfo.getState().getOOMKilled()
+                );
+
+    } catch (Exception exception) {
+        // Inspection failure must not hide the original result.
+        return false;
+    }
+}
+
 private void updatePeakMemory(
         Statistics statistics,
         AtomicLong peakMemoryBytes) {
@@ -196,11 +198,9 @@ private void updatePeakMemory(
         return;
     }
 
-    Object usageValue =
-            statistics.getMemoryStats().get("usage");
+    Long usageBytes = statistics.getMemoryStats().getUsage();
 
-    if (usageValue instanceof Number) {
-        long usageBytes = ((Number) usageValue).longValue();
+    if (usageBytes != null) {
 
         peakMemoryBytes.updateAndGet(
                 currentPeak -> Math.max(currentPeak, usageBytes)

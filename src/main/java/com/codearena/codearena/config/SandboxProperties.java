@@ -3,8 +3,6 @@ package com.codearena.codearena.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import com.codearena.codearena.model.SandboxLimits;
 
-import com.codearena.codearena.model.SandboxLimits;
-
 @ConfigurationProperties(prefix = "sandbox")
 public class SandboxProperties {
 
