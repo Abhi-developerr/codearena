@@ -8,10 +8,13 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
 import com.codearena.codearena.dto.ProblemTestCasePublicResponse;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import java.util.List;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -87,7 +90,34 @@ void regularUserCanAccessSampleTestCases() throws Exception {
     verify(problemTestCaseService)
             .getSampleTestCases(1L);
 }
+@Test
+@WithMockUser(roles = "USER")
+void regularUserCanAccessSampleTestCasesWithoutHiddenField() throws Exception {
 
+    ProblemTestCasePublicResponse sampleCase =
+            new ProblemTestCasePublicResponse(
+                    1L,
+                    "[2,7,11,15],9",
+                    "[0,1]"
+            );
+
+    when(problemTestCaseService.getSampleTestCases(1L))
+            .thenReturn(List.of(sampleCase));
+
+    mockMvc.perform(
+            get("/api/problems/1/test-cases/samples")
+                    .with(user("testuser").roles("USER"))
+    )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(1))
+            .andExpect(jsonPath("$[0].input")
+                    .value("[2,7,11,15],9"))
+            .andExpect(jsonPath("$[0].expectedOutput")
+                    .value("[0,1]"))
+            .andExpect(jsonPath("$[0].hidden").doesNotExist());
+
+    verify(problemTestCaseService).getSampleTestCases(1L);
+}
 
 
 }
