@@ -360,5 +360,21 @@ public void markUnexpectedExecutionFailure(Long submissionId) {
 
     submissionRepository.save(submission);
 }
+@Transactional
+public void refreshExecutionHeartbeat(Long submissionId) {
+
+    int updatedRows =
+            submissionRepository.refreshExecutionHeartbeat(
+                    submissionId,
+                    SubmissionStatus.RUNNING,
+                    Instant.now()
+            );
+
+    if (updatedRows == 0) {
+        throw new IllegalStateException(
+                "Cannot refresh heartbeat: submission is not running"
+        );
+    }
+}
 
 }

@@ -55,7 +55,18 @@ int claimQueuedSubmission(
         @Param("runningStatus") SubmissionStatus runningStatus,
         @Param("startedAt") Instant startedAt
 );
-
+@Modifying(flushAutomatically = true, clearAutomatically = true)
+@Query("""
+        update Submission submission
+        set submission.updatedAt = :heartbeatAt
+        where submission.id = :submissionId
+          and submission.status = :runningStatus
+        """)
+int refreshExecutionHeartbeat(
+        @Param("submissionId") Long submissionId,
+        @Param("runningStatus") SubmissionStatus runningStatus,
+        @Param("heartbeatAt") Instant heartbeatAt
+);
     List<Submission> findByStatusOrderByCreatedAtAsc(
         SubmissionStatus status,
         Pageable pageable

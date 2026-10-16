@@ -168,7 +168,16 @@ private SubmissionVerdict determineVerdict(
 }
 public ExecutionResult executeSubmission(Long submissionId) {
 
+  try {
     submissionService.markAsRunning(submissionId);
+
+} catch (IllegalArgumentException exception) {
+
+    throw new SubmissionClaimException(
+            "Submission could not be claimed for execution",
+            exception
+    );
+}
 
     Submission submission =
             submissionRepository.findById(submissionId)
