@@ -37,6 +37,13 @@ public class Submission {
 
     private Long memoryUsed;
 
+    @Column(nullable = false)
+private Integer retryCount = 0;
+
+private Instant startedAt;
+
+private Instant completedAt;
+
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -116,5 +123,27 @@ public class Submission {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
-    
+public Integer getRetryCount() {
+    return retryCount;
+}
+
+public void setRetryCount(Integer retryCount) {
+    this.retryCount = retryCount;
+}
+
+public Instant getStartedAt() {
+    return startedAt;
+}
+
+public void setStartedAt(Instant startedAt) {
+    this.startedAt = startedAt;
+}
+
+public Instant getCompletedAt() {
+    return completedAt;
+}
+
+public void setCompletedAt(Instant completedAt) {
+    this.completedAt = completedAt;
+}
 }

@@ -162,6 +162,52 @@ public Page<SubmissionResponse> getMySubmissions(
     );
 }
 
+@Transactional
+public void handleExecutionFailure(
+        Long submissionId,
+        int maxRetries) {
+
+    if (maxRetries < 0) {
+        throw new IllegalArgumentException(
+                "Maximum retries cannot be negative"
+        );
+    }
+
+    Submission submission =
+            submissionRepository.findById(submissionId)
+                    .orElseThrow(() ->
+                            new SubmissionNotFoundException(
+                                    "Submission not found"
+                            )
+                    );
+
+    if (submission.getStatus() != SubmissionStatus.RUNNING) {
+        throw new IllegalArgumentException(
+                "Only running submissions can be retried"
+        );
+    }
+
+    int retryCount = submission.getRetryCount();
+
+    if (retryCount < maxRetries) {
+        submission.setRetryCount(retryCount + 1);
+        submission.setStatus(SubmissionStatus.QUEUED);
+        submission.setStartedAt(null);
+        submission.setCompletedAt(null);
+        submission.setVerdict(null);
+        submission.setExecutionTime(null);
+        submission.setMemoryUsed(null);
+    } else {
+        submission.setStatus(SubmissionStatus.COMPLETED);
+        submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
+        submission.setExecutionTime(0L);
+        submission.setMemoryUsed(0L);
+        submission.setCompletedAt(Instant.now());
+    }
+
+    submissionRepository.save(submission);
+}
+
 @Transactional(readOnly = true)
 public Page<SubmissionResponse> getMySubmissionsForProblem(
         Long userId,
