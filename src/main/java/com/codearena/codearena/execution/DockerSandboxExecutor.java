@@ -196,14 +196,22 @@ if (memoryLimitExceeded) {
 }
 
 private boolean wasContainerOomKilled(String containerId) {
+
     try {
-        var state = dockerClient.inspectContainerCmd(containerId)
+        var state = dockerClient
+                .inspectContainerCmd(containerId)
                 .exec()
                 .getState();
-        return state != null && Boolean.TRUE.equals(state.getOOMKilled());
+
+        return state != null
+                && Boolean.TRUE.equals(state.getOOMKilled());
+
     } catch (RuntimeException exception) {
-        logger.warn("Unable to inspect sandbox container OOM status", exception);
-        return false;
+
+        throw new ExecutionInfrastructureException(
+                "Unable to inspect sandbox container memory status",
+                exception
+        );
     }
 }
 

@@ -336,4 +336,29 @@ public Page<SubmissionResponse> getAllSubmissions(
             .map(this::toResponse);
 }
 
+@Transactional
+public void markUnexpectedExecutionFailure(Long submissionId) {
+
+    Submission submission =
+            submissionRepository.findById(submissionId)
+                    .orElseThrow(() ->
+                            new SubmissionNotFoundException(
+                                    "Submission not found"
+                            )
+                    );
+
+    // Do not overwrite submissions that are no longer running.
+    if (submission.getStatus() != SubmissionStatus.RUNNING) {
+        return;
+    }
+
+    submission.setStatus(SubmissionStatus.COMPLETED);
+    submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
+    submission.setExecutionTime(0L);
+    submission.setMemoryUsed(0L);
+    submission.setCompletedAt(Instant.now());
+
+    submissionRepository.save(submission);
+}
+
 }
