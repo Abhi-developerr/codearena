@@ -166,44 +166,28 @@ private SubmissionVerdict determineVerdict(
 
     return SubmissionVerdict.ACCEPTED;
 }
-
 public ExecutionResult executeSubmission(Long submissionId) {
-    Submission submission = submissionRepository.findById(submissionId)
-            .orElseThrow(() ->
-                    new SubmissionNotFoundException("Submission not found"));
 
     submissionService.markAsRunning(submissionId);
 
-    ExecutionResult result;
+    Submission submission =
+            submissionRepository.findById(submissionId)
+                    .orElseThrow(() ->
+                            new SubmissionNotFoundException(
+                                    "Submission not found"
+                            )
+                    );
 
-    try {
-        ExecutionRequest request = new ExecutionRequest(
-                submission.getId(),
-                submission.getLanguage(),
-                submission.getSourceCode()
-        );
+    ExecutionRequest request = new ExecutionRequest(
+            submission.getId(),
+            submission.getLanguage(),
+            submission.getSourceCode()
+    );
 
-        List<ProblemTestCase> testCases =
-                getTestCases(submission.getProblem().getId());
+    List<ProblemTestCase> testCases =
+            getTestCases(submission.getProblem().getId());
 
-        result = execute(request, testCases);
-
-    } catch (Exception exception) {
-        try {
-            submissionService.updateExecutionResult(
-                    submissionId,
-                    SubmissionStatus.COMPLETED,
-                    SubmissionVerdict.RUNTIME_ERROR,
-                    0L,
-                    0L
-            );
-        } catch (Exception updateException) {
-            updateException.addSuppressed(exception);
-            throw updateException;
-        }
-
-        throw exception;
-    }
+    ExecutionResult result = execute(request, testCases);
 
     submissionService.updateExecutionResult(
             submissionId,
@@ -215,7 +199,6 @@ public ExecutionResult executeSubmission(Long submissionId) {
 
     return result;
 }
-
     private long calculateMaxMemoryUsed(
         List<TestCaseExecutionResult> results) {
 

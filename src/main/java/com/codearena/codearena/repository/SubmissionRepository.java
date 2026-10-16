@@ -39,24 +39,31 @@ List<Submission> findByStatus(
         SubmissionStatus status
 );
 
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("""
-            update Submission submission
-            set submission.status = :runningStatus,
-                submission.updatedAt = :updatedAt
-            where submission.id = :submissionId
-              and submission.status = :queuedStatus
-            """)
-    int claimQueuedSubmission(
-            @Param("submissionId") Long submissionId,
-            @Param("queuedStatus") SubmissionStatus queuedStatus,
-            @Param("runningStatus") SubmissionStatus runningStatus,
-            @Param("updatedAt") Instant updatedAt
-    );
+   @Modifying(flushAutomatically = true, clearAutomatically = true)
+@Query("""
+        update Submission submission
+        set submission.status = :runningStatus,
+            submission.startedAt = :startedAt,
+            submission.completedAt = null,
+            submission.updatedAt = :startedAt
+        where submission.id = :submissionId
+          and submission.status = :queuedStatus
+        """)
+int claimQueuedSubmission(
+        @Param("submissionId") Long submissionId,
+        @Param("queuedStatus") SubmissionStatus queuedStatus,
+        @Param("runningStatus") SubmissionStatus runningStatus,
+        @Param("startedAt") Instant startedAt
+);
 
     List<Submission> findByStatusOrderByCreatedAtAsc(
         SubmissionStatus status,
         Pageable pageable
+);
+
+List<Submission> findByStatusAndStartedAtBefore(
+        SubmissionStatus status,
+        Instant startedAt
 );
 
 }
