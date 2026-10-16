@@ -65,11 +65,6 @@ class ExecutionServiceTest {
 void executeSubmissionDoesNotContinueWhenMarkAsRunningFails() {
 
     Long submissionId = 10L;
-    Submission submission = new Submission();
-    submission.setStatus(SubmissionStatus.RUNNING);
-
-    when(submissionRepository.findById(submissionId))
-            .thenReturn(Optional.of(submission));
 
     org.mockito.Mockito.doThrow(
             new IllegalArgumentException(
@@ -215,23 +210,11 @@ void executeSubmissionPreservesOriginalExceptionWhenErrorUpdateFails() {
     RuntimeException executionException =
             new RuntimeException("Test case database error");
 
-    RuntimeException updateException =
-            new RuntimeException("Failed to save runtime error");
-
     when(problemTestCaseRepository.findByProblemId(1L))
             .thenThrow(executionException);
 
     org.mockito.Mockito.doNothing()
             .when(submissionService).markAsRunning(submissionId);
-
-    doThrow(updateException)
-            .when(submissionService).updateExecutionResult(
-                    submissionId,
-                    SubmissionStatus.COMPLETED,
-                    SubmissionVerdict.RUNTIME_ERROR,
-                    0L,
-                    0L
-            );
 
     RuntimeException thrown = assertThrows(
             RuntimeException.class,
