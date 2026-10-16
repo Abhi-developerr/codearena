@@ -54,33 +54,41 @@ public class SubmissionQueueProcessor {
         }
     }
 
-    private void processSubmission(Long submissionId) {
+   private void processSubmission(Long submissionId) {
+
+    try {
+        executionService.executeSubmission(submissionId);
+
+    } catch (ExecutionInfrastructureException exception) {
+
+        logger.warn(
+                "Infrastructure failure for submission {}. Attempting recovery.",
+                submissionId,
+                exception
+        );
 
         try {
-            executionService.executeSubmission(submissionId);
-
-        } catch (RuntimeException exception) {
-
-            logger.warn(
-                    "Execution failed for submission {}. Attempting recovery.",
+            submissionService.handleExecutionFailure(
                     submissionId,
-                    exception
+                    maxRetries
             );
 
-            try {
-                submissionService.handleExecutionFailure(
-                        submissionId,
-                        maxRetries
-                );
+        } catch (RuntimeException recoveryException) {
 
-            } catch (RuntimeException recoveryException) {
-
-                logger.warn(
-                        "Could not recover submission {}. Queue processing will continue.",
-                        submissionId,
-                        recoveryException
-                );
-            }
+            logger.error(
+                    "Could not recover submission {}. Queue processing will continue.",
+                    submissionId,
+                    recoveryException
+            );
         }
+
+    } catch (RuntimeException exception) {
+
+        logger.error(
+                "Non-infrastructure failure for submission {}. No immediate retry will be attempted.",
+                submissionId,
+                exception
+        );
     }
+}
 }

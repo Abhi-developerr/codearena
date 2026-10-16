@@ -5,6 +5,7 @@ import com.codearena.codearena.model.SandboxLimits;
 import com.codearena.codearena.model.SandboxErrorType;
 import com.codearena.codearena.config.SandboxProperties;
 import com.codearena.codearena.exception.SandboxTimeoutException;
+import com.github.dockerjava.api.exception.DockerException;
 import com.github.dockerjava.api.async.ResultCallback;
 import com.github.dockerjava.api.model.Statistics;
 import java.util.concurrent.atomic.AtomicLong;
