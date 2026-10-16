@@ -6,6 +6,7 @@ import com.codearena.codearena.repository.SubmissionRepository;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,7 @@ public class SubmissionQueueProcessor {
 
     private static final Logger logger =
             LoggerFactory.getLogger(SubmissionQueueProcessor.class);
+            private static final int BATCH_SIZE = 50;
 
     private final SubmissionRepository submissionRepository;
     private final ExecutionService executionService;
@@ -26,16 +28,19 @@ public class SubmissionQueueProcessor {
         this.executionService = executionService;
     }
 
-    @Scheduled(fixedDelayString = "${submission-queue.poll-interval:1000}")
-    public void processQueuedSubmissions() {
+   @Scheduled(fixedDelayString = "${submission-queue.poll-interval:1000}")
+public void processQueuedSubmissions() {
 
-        List<Submission> queuedSubmissions =
-                submissionRepository.findByStatus(SubmissionStatus.QUEUED);
+    List<Submission> queuedSubmissions =
+            submissionRepository.findByStatusOrderByCreatedAtAsc(
+                    SubmissionStatus.QUEUED,
+                    PageRequest.of(0, BATCH_SIZE)
+            );
 
-        for (Submission submission : queuedSubmissions) {
-            processSubmission(submission.getId());
-        }
+    for (Submission submission : queuedSubmissions) {
+        processSubmission(submission.getId());
     }
+}
 
     private void processSubmission(Long submissionId) {
         try {

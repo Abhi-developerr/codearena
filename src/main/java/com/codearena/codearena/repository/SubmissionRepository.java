@@ -54,4 +54,9 @@ List<Submission> findByStatus(
             @Param("updatedAt") Instant updatedAt
     );
 
+    List<Submission> findByStatusOrderByCreatedAtAsc(
+        SubmissionStatus status,
+        Pageable pageable
+);
+
 }
