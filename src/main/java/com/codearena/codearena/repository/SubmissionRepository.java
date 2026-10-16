@@ -2,7 +2,8 @@ package com.codearena.codearena.repository;
 
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
-
+import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,10 +14,23 @@ import java.util.List;
 import java.time.Instant;
 import org.springframework.data.repository.query.Param;
 
-
 public interface SubmissionRepository
         extends JpaRepository<Submission, Long> {
     
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            select submission
+            from Submission submission
+            where submission.id = :submissionId
+              and submission.status = :status
+              and submission.updatedAt < :staleThreshold
+            """)
+    Optional<Submission> findStaleRunningSubmissionForUpdate(
+            @Param("submissionId") Long submissionId,
+            @Param("status") SubmissionStatus status,
+            @Param("staleThreshold") Instant staleThreshold
+    );
+
                 
     Page<Submission> findByUserId(
             Long userId,
@@ -75,6 +89,11 @@ int refreshExecutionHeartbeat(
 List<Submission> findByStatusAndStartedAtBefore(
         SubmissionStatus status,
         Instant startedAt
+);
+
+List<Submission> findByStatusAndUpdatedAtBefore(
+        SubmissionStatus status,
+        Instant updatedAt
 );
 
 }

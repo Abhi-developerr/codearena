@@ -107,27 +107,6 @@ public TestCaseExecutionResult runTestCase(
     return testCaseRunner.run(request, testCase);
 }
 
-public List<TestCaseExecutionResult> runAllTestCases(
-        ExecutionRequest request,
-        List<ProblemTestCase> testCases) {
-
-    List<TestCaseExecutionResult> results = new ArrayList<>();
-
-    for (ProblemTestCase testCase : testCases) {
-
-        TestCaseExecutionResult result =
-                runTestCase(request, testCase);
-
-        results.add(result);
-
-        if (!result.isPassed()) {
-            break;
-        }
-    }
-
-    return results;
-}
-
 private List<ProblemTestCase> getTestCases(Long problemId) {
     return problemTestCaseRepository.findByProblemId(problemId);
 }
@@ -207,6 +186,32 @@ public ExecutionResult executeSubmission(Long submissionId) {
     );
 
     return result;
+}
+
+public List<TestCaseExecutionResult> runAllTestCases(
+        ExecutionRequest request,
+        List<ProblemTestCase> testCases) {
+
+    List<TestCaseExecutionResult> results = new ArrayList<>();
+
+    for (ProblemTestCase testCase : testCases) {
+
+        // Refresh activity before processing each test case.
+        submissionService.refreshExecutionHeartbeat(
+                request.getSubmissionId()
+        );
+
+        TestCaseExecutionResult result =
+                runTestCase(request, testCase);
+
+        results.add(result);
+
+        if (!result.isPassed()) {
+            break;
+        }
+    }
+
+    return results;
 }
     private long calculateMaxMemoryUsed(
         List<TestCaseExecutionResult> results) {

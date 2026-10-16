@@ -58,8 +58,7 @@ class ExecutionServiceTest {
                 () -> executionService.executeSubmission(submissionId)
         );
 
-        verify(submissionService, never())
-                .markAsRunning(submissionId);
+        verify(submissionService).markAsRunning(submissionId);
     }
 
 @Test
@@ -78,13 +77,17 @@ void executeSubmissionDoesNotContinueWhenMarkAsRunningFails() {
             )
     ).when(submissionService).markAsRunning(submissionId);
 
-    assertThrows(
-            IllegalArgumentException.class,
+    SubmissionClaimException thrown = assertThrows(
+            SubmissionClaimException.class,
             () -> executionService.executeSubmission(submissionId)
     );
 
     verify(submissionService).markAsRunning(submissionId);
     verifyNoInteractions(testCaseRunner);
+    org.junit.jupiter.api.Assertions.assertInstanceOf(
+            IllegalArgumentException.class,
+            thrown.getCause()
+    );
 }
 
 @Test
@@ -112,14 +115,13 @@ void executeSubmissionHandlesTestCaseFetchFailure() {
 
     verify(submissionService).markAsRunning(submissionId);
 
-    verify(submissionService).updateExecutionResult(
-            submissionId,
-            SubmissionStatus.COMPLETED,
-            SubmissionVerdict.RUNTIME_ERROR,
-            0L,
-            0L
+    verify(submissionService, never()).updateExecutionResult(
+            any(),
+            any(),
+            any(),
+            any(),
+            any()
     );
-
     verifyNoInteractions(testCaseRunner);
 }
 
@@ -236,14 +238,13 @@ void executeSubmissionPreservesOriginalExceptionWhenErrorUpdateFails() {
             () -> executionService.executeSubmission(submissionId)
     );
 
-    org.junit.jupiter.api.Assertions.assertSame(
-            updateException,
-            thrown
-    );
-
-    org.junit.jupiter.api.Assertions.assertSame(
-            executionException,
-            thrown.getSuppressed()[0]
+    org.junit.jupiter.api.Assertions.assertSame(executionException, thrown);
+    verify(submissionService, never()).updateExecutionResult(
+            any(),
+            any(),
+            any(),
+            any(),
+            any()
     );
 }
 
