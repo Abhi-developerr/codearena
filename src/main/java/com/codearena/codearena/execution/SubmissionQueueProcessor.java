@@ -7,11 +7,12 @@ import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.service.SubmissionService;
 
 import java.util.List;
+import java.time.Instant;
+import org.springframework.data.domain.PageRequest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -43,11 +44,12 @@ public class SubmissionQueueProcessor {
     @Scheduled(fixedDelayString = "${submission-queue.poll-interval:1000}")
     public void processQueuedSubmissions() {
 
-        List<Submission> queuedSubmissions =
-                submissionRepository.findByStatusOrderByCreatedAtAsc(
-                        SubmissionStatus.QUEUED,
-                        PageRequest.of(0, BATCH_SIZE)
-                );
+     List<Submission> queuedSubmissions =
+        submissionRepository.findEligibleQueuedSubmissions(
+                SubmissionStatus.QUEUED,
+                Instant.now(),
+                PageRequest.of(0, BATCH_SIZE)
+        );
 
         for (Submission submission : queuedSubmissions) {
             processSubmission(submission.getId());
