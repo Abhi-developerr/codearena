@@ -53,24 +53,30 @@ public class StaleSubmissionRecovery {
                 );
 
         for (Submission submission : staleSubmissions) {
-            try {
-                submissionService.handleExecutionFailure(
+
+    try {
+        boolean recovered =
+                submissionService.recoverStaleSubmission(
                         submission.getId(),
+                        staleThreshold,
                         maxRetries
                 );
 
-                logger.warn(
-                        "Recovered stale submission {}",
-                        submission.getId()
-                );
-
-            } catch (RuntimeException exception) {
-                logger.error(
-                        "Could not recover stale submission {}",
-                        submission.getId(),
-                        exception
-                );
-            }
+        if (recovered) {
+            logger.warn(
+                    "Recovered stale submission {}",
+                    submission.getId()
+            );
         }
+
+    } catch (RuntimeException exception) {
+
+        logger.error(
+                "Failed to recover stale submission {}",
+                submission.getId(),
+                exception
+        );
+    }
+}
     }
 }

@@ -334,14 +334,13 @@ private byte[] createSourceArchive(String sourceCode) {
         tarOutputStream.close();
 
         return outputStream.toByteArray();
+} catch (IOException exception) {
 
-    } catch (IOException exception) {
-
-        throw new IllegalStateException(
-                "Failed to create source archive",
-                exception
-        );
-    }
+    throw new ExecutionInfrastructureException(
+            "Failed to create source archive",
+            exception
+    );
+}
 }
 
 private ExecCommandResult compileSourceCode(
@@ -522,11 +521,11 @@ private byte[] createInputArchive(String input) {
 
     } catch (IOException exception) {
 
-        throw new IllegalStateException(
-                "Failed to create input archive",
-                exception
-        );
-    }
+    throw new ExecutionInfrastructureException(
+            "Failed to create input archive",
+            exception
+    );
+}
 }
 
 private void removeContainer(String containerId) {
