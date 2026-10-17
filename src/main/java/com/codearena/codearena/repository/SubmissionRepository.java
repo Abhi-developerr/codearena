@@ -30,6 +30,21 @@ public interface SubmissionRepository
             @Param("status") SubmissionStatus status,
             @Param("staleThreshold") Instant staleThreshold
     );
+    @Query("""
+        select submission
+        from Submission submission
+        where submission.status = :status
+          and (
+              submission.nextAttemptAt is null
+              or submission.nextAttemptAt <= :now
+          )
+        order by submission.createdAt asc
+        """)
+List<Submission> findEligibleQueuedSubmissions(
+        @Param("status") SubmissionStatus status,
+        @Param("now") Instant now,
+        Pageable pageable
+);
 
                 
     Page<Submission> findByUserId(

@@ -50,6 +50,8 @@ private Instant completedAt;
     @Column(nullable = false)
     private Instant updatedAt;
 
+    private Instant nextAttemptAt;
+
     public Submission() {
     }
 
@@ -84,6 +86,13 @@ private Instant completedAt;
     public SubmissionLanguage getLanguage() {
         return language;
     }
+    public Instant getNextAttemptAt() {
+    return nextAttemptAt;
+}
+
+public void setNextAttemptAt(Instant nextAttemptAt) {
+    this.nextAttemptAt = nextAttemptAt;
+}
     public void setLanguage(SubmissionLanguage language) {
         this.language = language;
     }

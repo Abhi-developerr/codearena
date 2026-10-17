@@ -335,14 +335,11 @@ if (submission.getStatus()
     );
 }
 
-submission.setStatus(
-        SubmissionStatus.COMPLETED
-);
-
+submission.setStatus(SubmissionStatus.COMPLETED);
 submission.setVerdict(verdict);
 submission.setExecutionTime(executionTime);
 submission.setMemoryUsed(memoryUsed);
-
+submission.setCompletedAt(Instant.now());
 submissionRepository.save(submission);
 }
 
