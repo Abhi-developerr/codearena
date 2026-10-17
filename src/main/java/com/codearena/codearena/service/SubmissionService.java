@@ -85,7 +85,59 @@ public class SubmissionService {
 
     return toResponse(savedSubmission);
 }
+@Transactional
+public boolean recoverStaleSubmission(
+        Long submissionId,
+        Instant staleThreshold,
+        int maxRetries) {
 
+    if (maxRetries < 0) {
+        throw new IllegalArgumentException(
+                "Maximum retries cannot be negative"
+        );
+    }
+
+    Submission submission =
+            submissionRepository.findStaleRunningSubmissionForUpdate(
+                    submissionId,
+                    SubmissionStatus.RUNNING,
+                    staleThreshold
+            ).orElse(null);
+
+    // The submission is no longer stale or RUNNING.
+    if (submission == null) {
+        return false;
+    }
+
+    Integer storedRetryCount = submission.getRetryCount();
+
+    int retryCount = storedRetryCount == null
+            ? 0
+            : storedRetryCount;
+
+    if (retryCount < maxRetries) {
+
+        submission.setRetryCount(retryCount + 1);
+        submission.setStatus(SubmissionStatus.QUEUED);
+        submission.setStartedAt(null);
+        submission.setCompletedAt(null);
+        submission.setVerdict(null);
+        submission.setExecutionTime(null);
+        submission.setMemoryUsed(null);
+
+    } else {
+
+        submission.setStatus(SubmissionStatus.COMPLETED);
+        submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
+        submission.setExecutionTime(0L);
+        submission.setMemoryUsed(0L);
+        submission.setCompletedAt(Instant.now());
+    }
+
+    submissionRepository.save(submission);
+
+    return true;
+}
 private SubmissionResponse toResponse(
         Submission submission) {
 
