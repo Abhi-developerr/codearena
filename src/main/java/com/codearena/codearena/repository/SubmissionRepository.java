@@ -2,6 +2,8 @@ package com.codearena.codearena.repository;
 
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
+import com.codearena.codearena.entity.SubmissionVerdict;
+
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,6 +18,31 @@ import org.springframework.data.repository.query.Param;
 
 public interface SubmissionRepository
         extends JpaRepository<Submission, Long> {
+
+                @Modifying
+@Query("""
+    update Submission submission
+    set submission.status = :completedStatus,
+        submission.verdict = :verdict,
+        submission.executionTime = :executionTime,
+        submission.memoryUsed = :memoryUsed,
+        submission.completedAt = :completedAt,
+        submission.updatedAt = :completedAt,
+        submission.nextAttemptAt = null
+    where submission.id = :submissionId
+      and submission.status = :runningStatus
+      and submission.executionAttempt = :executionAttempt
+    """)
+int completeExecutionAttempt(
+        @Param("submissionId") Long submissionId,
+        @Param("runningStatus") SubmissionStatus runningStatus,
+        @Param("completedStatus") SubmissionStatus completedStatus,
+        @Param("executionAttempt") Long executionAttempt,
+        @Param("verdict") SubmissionVerdict verdict,
+        @Param("executionTime") Long executionTime,
+        @Param("memoryUsed") Long memoryUsed,
+        @Param("completedAt") Instant completedAt
+);
     
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
