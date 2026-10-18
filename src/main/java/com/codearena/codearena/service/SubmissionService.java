@@ -40,7 +40,23 @@ public class SubmissionService {
         this.userRepository = userRepository;
         this.problemRepository = problemRepository;
     }
+private static final long BASE_RETRY_DELAY_SECONDS = 5L;
+private static final long MAX_RETRY_DELAY_SECONDS = 300L;
 
+private Instant calculateNextAttemptAt(int retryCount) {
+
+    int exponent = Math.min(
+            Math.max(retryCount, 0),
+            6
+    );
+
+    long delaySeconds = Math.min(
+            MAX_RETRY_DELAY_SECONDS,
+            BASE_RETRY_DELAY_SECONDS * (1L << exponent)
+    );
+
+    return Instant.now().plusSeconds(delaySeconds);
+}
     @Transactional
     public SubmissionResponse createSubmission(
         Long userId,
@@ -240,16 +256,33 @@ public void handleExecutionFailure(
     }
 
     int retryCount = submission.getRetryCount();
+    submission.setNextAttemptAt(
+        calculateNextAttemptAt(retryCount)
+);
 
     if (retryCount < maxRetries) {
-        submission.setRetryCount(retryCount + 1);
-        submission.setStatus(SubmissionStatus.QUEUED);
-        submission.setStartedAt(null);
-        submission.setCompletedAt(null);
-        submission.setVerdict(null);
-        submission.setExecutionTime(null);
-        submission.setMemoryUsed(null);
-    } else {
+
+    submission.setRetryCount(retryCount + 1);
+
+    submission.setNextAttemptAt(
+            calculateNextAttemptAt(retryCount)
+    );
+
+    submission.setStatus(SubmissionStatus.QUEUED);
+    submission.setStartedAt(null);
+    submission.setCompletedAt(null);
+    submission.setVerdict(null);
+    submission.setExecutionTime(null);
+    submission.setMemoryUsed(null);
+
+} else {
+    submission.setStatus(SubmissionStatus.COMPLETED);
+    submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
+    submission.setExecutionTime(0L);
+    submission.setMemoryUsed(0L);
+    submission.setCompletedAt(Instant.now());
+    submission.setNextAttemptAt(null);
+}
         submission.setStatus(SubmissionStatus.COMPLETED);
         submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
         submission.setExecutionTime(0L);
