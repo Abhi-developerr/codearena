@@ -58,7 +58,7 @@ public class StaleSubmissionRecovery {
         boolean recovered =
                 submissionService.recoverStaleSubmission(
                         submission.getId(),
-                        staleThreshold,
+                        cutoffTime,
                         maxRetries
                 );
 

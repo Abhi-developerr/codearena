@@ -3,7 +3,6 @@ package com.codearena.codearena.service;
 import com.codearena.codearena.dto.SubmissionCodeResponse;
 import com.codearena.codearena.dto.SubmissionRequest;
 import com.codearena.codearena.dto.SubmissionResponse;
-
 import com.codearena.codearena.entity.Problem;
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
@@ -16,12 +15,9 @@ import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.Instant;
-
 import com.codearena.codearena.exception.SubmissionNotFoundException;
 
 @Service
@@ -119,8 +115,6 @@ public boolean recoverStaleSubmission(
                     SubmissionStatus.RUNNING,
                     staleThreshold
             ).orElse(null);
-
-    // The submission is no longer stale or RUNNING.
     if (submission == null) {
         return false;
     }

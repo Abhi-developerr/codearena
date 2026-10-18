@@ -45,11 +45,15 @@ public class SubmissionQueueProcessor {
     public void processQueuedSubmissions() {
 
      List<Submission> queuedSubmissions =
-        submissionRepository.findEligibleQueuedSubmissions(
+        submissionRepository.findByStatusOrderByCreatedAtAsc(
                 SubmissionStatus.QUEUED,
-                Instant.now(),
                 PageRequest.of(0, BATCH_SIZE)
-        );
+        ).stream()
+        .filter(submission ->
+                submission.getNextAttemptAt() == null
+                        || !submission.getNextAttemptAt().isAfter(Instant.now())
+        )
+        .toList();
 
         for (Submission submission : queuedSubmissions) {
             processSubmission(submission.getId());

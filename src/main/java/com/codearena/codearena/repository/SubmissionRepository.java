@@ -31,13 +31,13 @@ public interface SubmissionRepository
         submission.nextAttemptAt = null
     where submission.id = :submissionId
       and submission.status = :runningStatus
-      and submission.executionAttempt = :executionAttempt
+      and submission.retryCount = :retryCount
     """)
 int completeExecutionAttempt(
         @Param("submissionId") Long submissionId,
         @Param("runningStatus") SubmissionStatus runningStatus,
         @Param("completedStatus") SubmissionStatus completedStatus,
-        @Param("executionAttempt") Long executionAttempt,
+        @Param("retryCount") Integer retryCount,
         @Param("verdict") SubmissionVerdict verdict,
         @Param("executionTime") Long executionTime,
         @Param("memoryUsed") Long memoryUsed,
