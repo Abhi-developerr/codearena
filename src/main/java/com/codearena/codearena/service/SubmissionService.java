@@ -277,12 +277,6 @@ public void handleExecutionFailure(
     submission.setCompletedAt(Instant.now());
     submission.setNextAttemptAt(null);
 }
-        submission.setStatus(SubmissionStatus.COMPLETED);
-        submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
-        submission.setExecutionTime(0L);
-        submission.setMemoryUsed(0L);
-        submission.setCompletedAt(Instant.now());
-    }
 
     submissionRepository.save(submission);
 }
@@ -452,5 +446,4 @@ public void refreshExecutionHeartbeat(Long submissionId) {
         );
     }
 }
-
 }
