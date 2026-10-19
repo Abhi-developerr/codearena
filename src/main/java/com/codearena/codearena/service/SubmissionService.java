@@ -143,9 +143,7 @@ public boolean recoverStaleSubmission(
         submission.setMemoryUsed(0L);
         submission.setCompletedAt(Instant.now());
     }
-
     submissionRepository.save(submission);
-
     return true;
 }
 private SubmissionResponse toResponse(
@@ -277,8 +275,7 @@ public void handleExecutionFailure(
     submission.setCompletedAt(Instant.now());
     submission.setNextAttemptAt(null);
 }
-
-    submissionRepository.save(submission);
+submissionRepository.save(submission);
 }
 
 @Transactional(readOnly = true)
@@ -417,7 +414,6 @@ public void markUnexpectedExecutionFailure(Long submissionId) {
                             )
                     );
 
-    // Do not overwrite submissions that are no longer running.
     if (submission.getStatus() != SubmissionStatus.RUNNING) {
         return;
     }
@@ -427,7 +423,6 @@ public void markUnexpectedExecutionFailure(Long submissionId) {
     submission.setExecutionTime(0L);
     submission.setMemoryUsed(0L);
     submission.setCompletedAt(Instant.now());
-
     submissionRepository.save(submission);
 }
 @Transactional
