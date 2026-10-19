@@ -196,7 +196,6 @@ public List<TestCaseExecutionResult> runAllTestCases(
 
     for (ProblemTestCase testCase : testCases) {
 
-        // Refresh activity before processing each test case.
         submissionService.refreshExecutionHeartbeat(
                 request.getSubmissionId()
         );
@@ -243,7 +242,4 @@ private String findErrorMessage(
 
     return null;
 }
-
-
-
 }
