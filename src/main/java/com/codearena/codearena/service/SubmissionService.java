@@ -97,6 +97,7 @@ private Instant calculateNextAttemptAt(int retryCount) {
 
     return toResponse(savedSubmission);
 }
+
 @Transactional
 public boolean recoverStaleSubmission(
         Long submissionId,
@@ -115,15 +116,13 @@ public boolean recoverStaleSubmission(
                     SubmissionStatus.RUNNING,
                     staleThreshold
             ).orElse(null);
+
     if (submission == null) {
         return false;
     }
 
     Integer storedRetryCount = submission.getRetryCount();
-
-    int retryCount = storedRetryCount == null
-            ? 0
-            : storedRetryCount;
+    int retryCount = storedRetryCount == null ? 0 : storedRetryCount;
 
     if (retryCount < maxRetries) {
 
@@ -135,6 +134,10 @@ public boolean recoverStaleSubmission(
         submission.setExecutionTime(null);
         submission.setMemoryUsed(null);
 
+        submission.setNextAttemptAt(
+                calculateNextAttemptAt(retryCount)
+        );
+
     } else {
 
         submission.setStatus(SubmissionStatus.COMPLETED);
@@ -142,10 +145,13 @@ public boolean recoverStaleSubmission(
         submission.setExecutionTime(0L);
         submission.setMemoryUsed(0L);
         submission.setCompletedAt(Instant.now());
+        submission.setNextAttemptAt(null);
     }
+
     submissionRepository.save(submission);
     return true;
 }
+
 private SubmissionResponse toResponse(
         Submission submission) {
 
@@ -222,6 +228,7 @@ public Page<SubmissionResponse> getMySubmissions(
     );
 }
 
+
 @Transactional
 public void handleExecutionFailure(
         Long submissionId,
@@ -247,36 +254,36 @@ public void handleExecutionFailure(
         );
     }
 
-    int retryCount = submission.getRetryCount();
-    submission.setNextAttemptAt(
-        calculateNextAttemptAt(retryCount)
-);
+    Integer storedRetryCount = submission.getRetryCount();
+    int retryCount = storedRetryCount == null ? 0 : storedRetryCount;
 
     if (retryCount < maxRetries) {
 
-    submission.setRetryCount(retryCount + 1);
+        submission.setRetryCount(retryCount + 1);
+        submission.setNextAttemptAt(
+                calculateNextAttemptAt(retryCount)
+        );
 
-    submission.setNextAttemptAt(
-            calculateNextAttemptAt(retryCount)
-    );
+        submission.setStatus(SubmissionStatus.QUEUED);
+        submission.setStartedAt(null);
+        submission.setCompletedAt(null);
+        submission.setVerdict(null);
+        submission.setExecutionTime(null);
+        submission.setMemoryUsed(null);
 
-    submission.setStatus(SubmissionStatus.QUEUED);
-    submission.setStartedAt(null);
-    submission.setCompletedAt(null);
-    submission.setVerdict(null);
-    submission.setExecutionTime(null);
-    submission.setMemoryUsed(null);
+    } else {
 
-} else {
-    submission.setStatus(SubmissionStatus.COMPLETED);
-    submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
-    submission.setExecutionTime(0L);
-    submission.setMemoryUsed(0L);
-    submission.setCompletedAt(Instant.now());
-    submission.setNextAttemptAt(null);
+        submission.setStatus(SubmissionStatus.COMPLETED);
+        submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
+        submission.setExecutionTime(0L);
+        submission.setMemoryUsed(0L);
+        submission.setCompletedAt(Instant.now());
+        submission.setNextAttemptAt(null);
+    }
+
+    submissionRepository.save(submission);
 }
-submissionRepository.save(submission);
-}
+
 
 @Transactional(readOnly = true)
 public Page<SubmissionResponse> getMySubmissionsForProblem(
