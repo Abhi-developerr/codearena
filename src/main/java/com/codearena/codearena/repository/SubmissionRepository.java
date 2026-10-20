@@ -164,4 +164,14 @@ public interface SubmissionRepository
             SubmissionStatus status,
             Instant updatedAt
     );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+@Query("""
+    select submission
+    from Submission submission
+    where submission.id = :submissionId
+    """)
+Optional<Submission> findByIdForUpdate(
+    @Param("submissionId") Long submissionId
+);
 }

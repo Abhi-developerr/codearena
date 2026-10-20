@@ -145,10 +145,15 @@ public class ExecutionService {
             return result;
         }
 
-        ExecutionResult result = execute(request, testCases);
+        ExecutionResult result = execute(
+                request,
+                testCases,
+                attemptRetryCount
+        );
 
         submissionService.updateExecutionResult(
                 submissionId,
+                attemptRetryCount,
                 SubmissionStatus.COMPLETED,
                 result.getVerdict(),
                 result.getExecutionTime(),
@@ -162,14 +167,24 @@ public class ExecutionService {
             ExecutionRequest request,
             List<ProblemTestCase> testCases) {
 
+        return runAllTestCases(request, testCases, null);
+    }
+
+    private List<TestCaseExecutionResult> runAllTestCases(
+            ExecutionRequest request,
+            List<ProblemTestCase> testCases,
+            Integer attemptRetryCount) {
+
         List<TestCaseExecutionResult> results = new ArrayList<>();
 
         for (ProblemTestCase testCase : testCases) {
 
-           submissionService.refreshExecutionHeartbeat(
-           request.getSubmissionId(),
-           attemptRetryCount
-        );
+            if (attemptRetryCount != null) {
+                submissionService.refreshExecutionHeartbeat(
+                        request.getSubmissionId(),
+                        attemptRetryCount
+                );
+            }
 
             TestCaseExecutionResult result =
                     runTestCase(request, testCase);
@@ -182,6 +197,34 @@ public class ExecutionService {
         }
 
         return results;
+    }
+
+    private ExecutionResult execute(
+            ExecutionRequest request,
+            List<ProblemTestCase> testCases,
+            Integer attemptRetryCount) {
+
+        if (testCases == null || testCases.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Problem has no test cases"
+            );
+        }
+
+        List<TestCaseExecutionResult> results =
+                runAllTestCases(request, testCases, attemptRetryCount);
+
+        SubmissionVerdict verdict = determineVerdict(results);
+        long totalExecutionTime = calculateTotalExecutionTime(results);
+        long maxMemoryUsed = calculateMaxMemoryUsed(results);
+        String errorMessage = findErrorMessage(results);
+
+        return new ExecutionResult(
+                verdict,
+                totalExecutionTime,
+                maxMemoryUsed,
+                errorMessage,
+                results
+        );
     }
 
     private SubmissionVerdict determineVerdict(

@@ -231,51 +231,46 @@ public Page<SubmissionResponse> getMySubmissions(
 @Transactional
 public void handleExecutionFailure(
         Long submissionId,
-        int maxRetries) {
-
-    if (maxRetries < 0) {
+        Integer attemptRetryCount,
+        int maxRetries
+) {
+    if (attemptRetryCount == null || attemptRetryCount < 0) {
         throw new IllegalArgumentException(
-                "Maximum retries cannot be negative"
+            "Attempt retry count must be non-negative"
         );
     }
 
-    Submission submission =
-            submissionRepository.findById(submissionId)
-                    .orElseThrow(() ->
-                            new SubmissionNotFoundException(
-                                    "Submission not found"
-                            )
-                    );
+    Submission submission = submissionRepository
+        .findByIdForUpdate(submissionId)
+        .orElseThrow(() -> new IllegalArgumentException(
+            "Submission not found: " + submissionId
+        ));
 
-    if (submission.getStatus() != SubmissionStatus.RUNNING) {
-        throw new IllegalArgumentException(
-                "Only running submissions can be retried"
-        );
+    // Ignore failures reported by an outdated execution attempt.
+    if (submission.getStatus() != SubmissionStatus.RUNNING
+            || !attemptRetryCount.equals(submission.getRetryCount())) {
+        return;
     }
 
-    Integer storedRetryCount = submission.getRetryCount();
-    int retryCount = storedRetryCount == null ? 0 : storedRetryCount;
+    int retryCount = submission.getRetryCount() == null
+        ? 0
+        : submission.getRetryCount();
 
     if (retryCount < maxRetries) {
+        retryCount++;
 
-        submission.setRetryCount(retryCount + 1);
-        submission.setNextAttemptAt(
-                calculateNextAttemptAt(retryCount)
-        );
-
+        submission.setRetryCount(retryCount);
         submission.setStatus(SubmissionStatus.QUEUED);
+        submission.setNextAttemptAt(calculateNextAttemptAt(retryCount));
+
         submission.setStartedAt(null);
         submission.setCompletedAt(null);
         submission.setVerdict(null);
         submission.setExecutionTime(null);
         submission.setMemoryUsed(null);
-
     } else {
-
         submission.setStatus(SubmissionStatus.COMPLETED);
         submission.setVerdict(SubmissionVerdict.RUNTIME_ERROR);
-        submission.setExecutionTime(0L);
-        submission.setMemoryUsed(0L);
         submission.setCompletedAt(Instant.now());
         submission.setNextAttemptAt(null);
     }
