@@ -112,6 +112,7 @@ public class ExecutionService {
                                 "Submission not found"
                         )
                 );
+                Integer attemptRetryCount = submission.getRetryCount();
 
         ExecutionRequest request = new ExecutionRequest(
                 submission.getId(),
@@ -132,13 +133,14 @@ public class ExecutionService {
                     List.of()
             );
 
-            submissionService.updateExecutionResult(
-                    submissionId,
-                    SubmissionStatus.COMPLETED,
-                    result.getVerdict(),
-                    result.getExecutionTime(),
-                    result.getMemoryUsed()
-            );
+        submissionService.updateExecutionResult(
+        submissionId,
+        attemptRetryCount,
+        SubmissionStatus.COMPLETED,
+        result.getVerdict(),
+        result.getExecutionTime(),
+        result.getMemoryUsed()
+);
 
             return result;
         }
@@ -164,9 +166,10 @@ public class ExecutionService {
 
         for (ProblemTestCase testCase : testCases) {
 
-            submissionService.refreshExecutionHeartbeat(
-                    request.getSubmissionId()
-            );
+           submissionService.refreshExecutionHeartbeat(
+           request.getSubmissionId(),
+           attemptRetryCount
+        );
 
             TestCaseExecutionResult result =
                     runTestCase(request, testCase);
