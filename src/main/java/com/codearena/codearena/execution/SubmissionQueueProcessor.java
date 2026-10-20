@@ -53,14 +53,14 @@ public class SubmissionQueueProcessor {
         .toList();
 
         for (Submission submission : queuedSubmissions) {
-            processSubmission(submission);
-        }
+        processSubmission(
+        submission.getId(),
+        submission.getRetryCount()
+    );
+}
     }
 
-   private void processSubmission(Submission submission) {
-
-    Long submissionId = submission.getId();
-    Integer attemptRetryCount = submission.getRetryCount();
+   private void processSubmission(Long submissionId, Integer attemptRetryCount) {
 
     try {
         executionService.executeSubmission(submissionId);
