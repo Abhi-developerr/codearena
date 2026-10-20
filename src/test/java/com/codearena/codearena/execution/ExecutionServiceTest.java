@@ -55,10 +55,10 @@ class ExecutionServiceTest {
 
         assertThrows(
                 SubmissionNotFoundException.class,
-                () -> executionService.executeSubmission(submissionId)
+                () -> executionService.executeSubmission(submissionId, 0)
         );
 
-        verify(submissionService).markAsRunning(submissionId);
+        verify(submissionService).markAsRunning(submissionId, 0);
     }
 
 @Test
@@ -70,14 +70,14 @@ void executeSubmissionDoesNotContinueWhenMarkAsRunningFails() {
             new IllegalArgumentException(
                     "Only queued submissions can be marked as running"
             )
-    ).when(submissionService).markAsRunning(submissionId);
+    ).when(submissionService).markAsRunning(submissionId, 0);
 
     SubmissionClaimException thrown = assertThrows(
             SubmissionClaimException.class,
-            () -> executionService.executeSubmission(submissionId)
+            () -> executionService.executeSubmission(submissionId, 0)
     );
 
-    verify(submissionService).markAsRunning(submissionId);
+    verify(submissionService).markAsRunning(submissionId, 0);
     verifyNoInteractions(testCaseRunner);
     org.junit.jupiter.api.Assertions.assertInstanceOf(
             IllegalArgumentException.class,
@@ -103,12 +103,12 @@ void executeSubmissionHandlesTestCaseFetchFailure() {
             .thenThrow(new RuntimeException("Database error"));
 
     org.mockito.Mockito.doNothing()
-            .when(submissionService).markAsRunning(submissionId);
+            .when(submissionService).markAsRunning(submissionId, 0);
 
     assertThrows(RuntimeException.class,
-            () -> executionService.executeSubmission(submissionId));
+            () -> executionService.executeSubmission(submissionId, 0));
 
-    verify(submissionService).markAsRunning(submissionId);
+    verify(submissionService).markAsRunning(submissionId, 0);
 
     verify(submissionService, never()).updateExecutionResult(
             any(),
@@ -146,7 +146,7 @@ void executeSubmissionDoesNotRetryAsRuntimeErrorWhenSuccessUpdateFails() {
             .thenReturn(List.of(testCase));
 
     org.mockito.Mockito.doNothing()
-            .when(submissionService).markAsRunning(submissionId);
+            .when(submissionService).markAsRunning(submissionId, 0);
 
     TestCaseExecutionResult passedResult = new TestCaseExecutionResult(
             1L,
@@ -173,10 +173,10 @@ void executeSubmissionDoesNotRetryAsRuntimeErrorWhenSuccessUpdateFails() {
 
     assertThrows(
             RuntimeException.class,
-            () -> executionService.executeSubmission(submissionId)
+            () -> executionService.executeSubmission(submissionId, 0)
     );
 
-    verify(submissionService).markAsRunning(submissionId);
+    verify(submissionService).markAsRunning(submissionId, 0);
 
     verify(submissionService).updateExecutionResult(
             submissionId,
@@ -218,11 +218,11 @@ void executeSubmissionPreservesOriginalExceptionWhenErrorUpdateFails() {
             .thenThrow(executionException);
 
     org.mockito.Mockito.doNothing()
-            .when(submissionService).markAsRunning(submissionId);
+            .when(submissionService).markAsRunning(submissionId, 0);
 
     RuntimeException thrown = assertThrows(
             RuntimeException.class,
-            () -> executionService.executeSubmission(submissionId)
+            () -> executionService.executeSubmission(submissionId, 0)
     );
 
     org.junit.jupiter.api.Assertions.assertSame(executionException, thrown);

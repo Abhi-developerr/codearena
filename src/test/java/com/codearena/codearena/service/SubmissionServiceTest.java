@@ -12,7 +12,6 @@ import com.codearena.codearena.entity.SubmissionStatus;
 import com.codearena.codearena.repository.ProblemRepository;
 import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.repository.UserRepository;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,19 +46,19 @@ class SubmissionServiceTest {
         Long submissionId = 1L;
         Submission submission = new Submission();
         submission.setStatus(SubmissionStatus.QUEUED);
+        submission.setRetryCount(0);
 
-        when(submissionRepository.findById(submissionId))
-                .thenReturn(Optional.of(submission));
         when(submissionRepository.claimQueuedSubmission(
-                any(), any(), any(), any()))
+                any(), any(), any(), any(), any()))
                 .thenReturn(1);
 
-        assertDoesNotThrow(() -> submissionService.markAsRunning(submissionId));
+        assertDoesNotThrow(() -> submissionService.markAsRunning(submissionId, 0));
 
         verify(submissionRepository).claimQueuedSubmission(
                 org.mockito.ArgumentMatchers.eq(submissionId),
                 org.mockito.ArgumentMatchers.eq(SubmissionStatus.QUEUED),
                 org.mockito.ArgumentMatchers.eq(SubmissionStatus.RUNNING),
+                org.mockito.ArgumentMatchers.eq(0),
                 any()
         );
         verify(submissionRepository, never()).save(submission);
@@ -70,16 +69,15 @@ class SubmissionServiceTest {
         Long submissionId = 1L;
         Submission submission = new Submission();
         submission.setStatus(SubmissionStatus.QUEUED);
+        submission.setRetryCount(0);
 
-        when(submissionRepository.findById(submissionId))
-                .thenReturn(Optional.of(submission));
         when(submissionRepository.claimQueuedSubmission(
-                any(), any(), any(), any()))
+                any(), any(), any(), any(), any()))
                 .thenReturn(0);
 
         assertThrows(
                 IllegalArgumentException.class,
-                () -> submissionService.markAsRunning(submissionId)
+                () -> submissionService.markAsRunning(submissionId, 0)
         );
     }
 }
