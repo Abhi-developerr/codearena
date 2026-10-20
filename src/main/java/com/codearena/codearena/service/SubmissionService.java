@@ -228,7 +228,6 @@ public Page<SubmissionResponse> getMySubmissions(
     );
 }
 
-
 @Transactional
 public void handleExecutionFailure(
         Long submissionId,
@@ -284,7 +283,6 @@ public void handleExecutionFailure(
     submissionRepository.save(submission);
 }
 
-
 @Transactional(readOnly = true)
 public Page<SubmissionResponse> getMySubmissionsForProblem(
         Long userId,
@@ -317,6 +315,7 @@ public Page<SubmissionResponse> getMySubmissionsForProblem(
 @Transactional
 public void updateExecutionResult(
         Long submissionId,
+        Integer attemptRetryCount,
         SubmissionStatus status,
         SubmissionVerdict verdict,
         Long executionTime,
@@ -328,44 +327,48 @@ public void updateExecutionResult(
         );
     }
 
+    if (attemptRetryCount == null || attemptRetryCount < 0) {
+        throw new IllegalArgumentException(
+                "Attempt retry count must be zero or greater"
+        );
+    }
+
     if (verdict == null) {
         throw new IllegalArgumentException(
                 "Completed submission must have a verdict"
         );
     }
-if (executionTime == null || executionTime < 0) {
-    throw new IllegalArgumentException(
-            "Execution time must be zero or greater"
-    );
-}
 
-if (memoryUsed == null || memoryUsed < 0) {
-    throw new IllegalArgumentException(
-            "Memory used must be zero or greater"
-    );
-}
-   Submission submission =
-        submissionRepository.findById(submissionId)
-                .orElseThrow(() ->
-                        new SubmissionNotFoundException(
-                                "Submission not found"
-                        )
-                );
+    if (executionTime == null || executionTime < 0) {
+        throw new IllegalArgumentException(
+                "Execution time must be zero or greater"
+        );
+    }
 
-if (submission.getStatus()
-        != SubmissionStatus.RUNNING) {
+    if (memoryUsed == null || memoryUsed < 0) {
+        throw new IllegalArgumentException(
+                "Memory used must be zero or greater"
+        );
+    }
 
-    throw new IllegalArgumentException(
-            "Only running submissions can be completed"
-    );
-}
+    int updatedRows =
+            submissionRepository.completeExecutionAttempt(
+                    submissionId,
+                    SubmissionStatus.RUNNING,
+                    SubmissionStatus.COMPLETED,
+                    attemptRetryCount,
+                    verdict,
+                    executionTime,
+                    memoryUsed,
+                    Instant.now()
+            );
 
-submission.setStatus(SubmissionStatus.COMPLETED);
-submission.setVerdict(verdict);
-submission.setExecutionTime(executionTime);
-submission.setMemoryUsed(memoryUsed);
-submission.setCompletedAt(Instant.now());
-submissionRepository.save(submission);
+    if (updatedRows != 1) {
+        throw new IllegalStateException(
+                "Execution result rejected because the submission "
+                        + "is no longer owned by this attempt"
+        );
+    }
 }
 
 @Transactional
@@ -432,20 +435,32 @@ public void markUnexpectedExecutionFailure(Long submissionId) {
     submission.setCompletedAt(Instant.now());
     submissionRepository.save(submission);
 }
+
 @Transactional
-public void refreshExecutionHeartbeat(Long submissionId) {
+public void refreshExecutionHeartbeat(
+        Long submissionId,
+        Integer attemptRetryCount) {
+
+    if (attemptRetryCount == null || attemptRetryCount < 0) {
+        throw new IllegalArgumentException(
+                "Attempt retry count must be zero or greater"
+        );
+    }
 
     int updatedRows =
-            submissionRepository.refreshExecutionHeartbeat(
+            submissionRepository.refreshExecutionHeartbeatForAttempt(
                     submissionId,
                     SubmissionStatus.RUNNING,
+                    attemptRetryCount,
                     Instant.now()
             );
 
-    if (updatedRows == 0) {
+    if (updatedRows != 1) {
         throw new IllegalStateException(
-                "Cannot refresh heartbeat: submission is not running"
+                "Heartbeat rejected because the submission is no "
+                        + "longer owned by this execution attempt"
         );
     }
 }
+
 }

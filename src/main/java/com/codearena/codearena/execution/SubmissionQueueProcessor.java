@@ -1,15 +1,12 @@
-
 package com.codearena.codearena.execution;
 
 import com.codearena.codearena.entity.Submission;
 import com.codearena.codearena.entity.SubmissionStatus;
 import com.codearena.codearena.repository.SubmissionRepository;
 import com.codearena.codearena.service.SubmissionService;
-
 import java.util.List;
 import java.time.Instant;
 import org.springframework.data.domain.PageRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
