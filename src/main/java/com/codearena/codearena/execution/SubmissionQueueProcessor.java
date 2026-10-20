@@ -53,11 +53,14 @@ public class SubmissionQueueProcessor {
         .toList();
 
         for (Submission submission : queuedSubmissions) {
-            processSubmission(submission.getId());
+            processSubmission(submission);
         }
     }
 
-   private void processSubmission(Long submissionId) {
+   private void processSubmission(Submission submission) {
+
+    Long submissionId = submission.getId();
+    Integer attemptRetryCount = submission.getRetryCount();
 
     try {
         executionService.executeSubmission(submissionId);
@@ -73,6 +76,7 @@ public class SubmissionQueueProcessor {
         try {
             submissionService.handleExecutionFailure(
                     submissionId,
+                    attemptRetryCount,
                     maxRetries
             );
 

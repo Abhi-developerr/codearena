@@ -115,6 +115,7 @@ void executeSubmissionHandlesTestCaseFetchFailure() {
             any(),
             any(),
             any(),
+            any(),
             any()
     );
     verifyNoInteractions(testCaseRunner);
@@ -163,6 +164,7 @@ void executeSubmissionDoesNotRetryAsRuntimeErrorWhenSuccessUpdateFails() {
     doThrow(new RuntimeException("Database update failed"))
             .when(submissionService).updateExecutionResult(
                     submissionId,
+                    0,
                     SubmissionStatus.COMPLETED,
                     SubmissionVerdict.ACCEPTED,
                     10L,
@@ -178,6 +180,7 @@ void executeSubmissionDoesNotRetryAsRuntimeErrorWhenSuccessUpdateFails() {
 
     verify(submissionService).updateExecutionResult(
             submissionId,
+            0,
             SubmissionStatus.COMPLETED,
             SubmissionVerdict.ACCEPTED,
             10L,
@@ -186,6 +189,7 @@ void executeSubmissionDoesNotRetryAsRuntimeErrorWhenSuccessUpdateFails() {
 
     verify(submissionService, never()).updateExecutionResult(
             submissionId,
+            0,
             SubmissionStatus.COMPLETED,
             SubmissionVerdict.RUNTIME_ERROR,
             0L,
@@ -223,6 +227,7 @@ void executeSubmissionPreservesOriginalExceptionWhenErrorUpdateFails() {
 
     org.junit.jupiter.api.Assertions.assertSame(executionException, thrown);
     verify(submissionService, never()).updateExecutionResult(
+            any(),
             any(),
             any(),
             any(),
