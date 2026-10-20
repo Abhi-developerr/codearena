@@ -39,26 +39,22 @@ public class SubmissionQueueProcessor {
     }
 
     @Scheduled(fixedDelayString = "${submission-queue.poll-interval:1000}")
-    public void processQueuedSubmissions() {
+public void processQueuedSubmissions() {
 
-     List<Submission> queuedSubmissions =
-        submissionRepository.findByStatusOrderByCreatedAtAsc(
-                SubmissionStatus.QUEUED,
-                PageRequest.of(0, BATCH_SIZE)
-        ).stream()
-        .filter(submission ->
-                submission.getNextAttemptAt() == null
-                        || !submission.getNextAttemptAt().isAfter(Instant.now())
-        )
-        .toList();
+    List<Submission> queuedSubmissions =
+            submissionRepository.findEligibleQueuedSubmissions(
+                    SubmissionStatus.QUEUED,
+                    Instant.now(),
+                    PageRequest.of(0, BATCH_SIZE)
+            );
 
-        for (Submission submission : queuedSubmissions) {
+    for (Submission submission : queuedSubmissions) {
         processSubmission(
-        submission.getId(),
-        submission.getRetryCount()
-    );
-}
+                submission.getId(),
+                submission.getRetryCount()
+        );
     }
+}
 
    private void processSubmission(Long submissionId, Integer attemptRetryCount) {
 

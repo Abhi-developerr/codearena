@@ -126,17 +126,21 @@ public boolean recoverStaleSubmission(
 
     if (retryCount < maxRetries) {
 
-        submission.setRetryCount(retryCount + 1);
-        submission.setStatus(SubmissionStatus.QUEUED);
+      
+       
         submission.setStartedAt(null);
         submission.setCompletedAt(null);
         submission.setVerdict(null);
         submission.setExecutionTime(null);
         submission.setMemoryUsed(null);
+        int nextRetryCount = retryCount + 1;
+
+        submission.setRetryCount(nextRetryCount);
+        submission.setStatus(SubmissionStatus.QUEUED);
 
         submission.setNextAttemptAt(
-                calculateNextAttemptAt(retryCount)
-        );
+        calculateNextAttemptAt(nextRetryCount)
+         );
 
     } else {
 
@@ -234,6 +238,11 @@ public void handleExecutionFailure(
         Integer attemptRetryCount,
         int maxRetries
 ) {
+        if (maxRetries < 0) {
+    throw new IllegalArgumentException(
+        "Maximum retries cannot be negative"
+    );
+}
     if (attemptRetryCount == null || attemptRetryCount < 0) {
         throw new IllegalArgumentException(
             "Attempt retry count must be non-negative"
