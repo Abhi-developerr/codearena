@@ -97,27 +97,25 @@ public interface SubmissionRepository
             SubmissionStatus status
     );
 
-    @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("""
-        update Submission submission
-        set submission.status = :runningStatus,
-            submission.startedAt = :startedAt,
-            submission.completedAt = null,
-            submission.updatedAt = :startedAt
-        where submission.id = :submissionId
-          and submission.status = :queuedStatus
-        """)
-    int claimQueuedSubmission(
-            @Param("submissionId") Long submissionId,
-            @Param("queuedStatus") SubmissionStatus queuedStatus,
-            @Param("runningStatus") SubmissionStatus runningStatus,
-            @Param("startedAt") Instant startedAt
-    );
+   @Modifying(flushAutomatically = true, clearAutomatically = true)
+@Query("""
+    update Submission submission
+    set submission.status = :runningStatus,
+        submission.startedAt = :startedAt,
+        submission.completedAt = null,
+        submission.updatedAt = :startedAt
+    where submission.id = :submissionId
+      and submission.status = :queuedStatus
+      and submission.retryCount = :retryCount
+    """)
+int claimQueuedSubmission(
+        @Param("submissionId") Long submissionId,
+        @Param("queuedStatus") SubmissionStatus queuedStatus,
+        @Param("runningStatus") SubmissionStatus runningStatus,
+        @Param("retryCount") Integer retryCount,
+        @Param("startedAt") Instant startedAt
+);
 
-    /*
-     * Attempt-aware heartbeat.
-     * An older worker cannot refresh the heartbeat after retryCount changes.
-     */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         update Submission submission
@@ -133,10 +131,6 @@ public interface SubmissionRepository
             @Param("heartbeatAt") Instant heartbeatAt
     );
 
-    /*
-     * Kept for compatibility with existing callers.
-     * ExecutionService should use the attempt-aware method above.
-     */
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
         update Submission submission

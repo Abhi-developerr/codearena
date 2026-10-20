@@ -59,7 +59,7 @@ public void processQueuedSubmissions() {
    private void processSubmission(Long submissionId, Integer attemptRetryCount) {
 
     try {
-        executionService.executeSubmission(submissionId);
+        executionService.executeSubmission(submissionId, attemptRetryCount);
 
     } catch (ExecutionInfrastructureException exception) {
 

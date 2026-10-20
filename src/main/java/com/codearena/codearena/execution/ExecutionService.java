@@ -95,16 +95,21 @@ public class ExecutionService {
         return problemTestCaseRepository.findByProblemId(problemId);
     }
 
-    public ExecutionResult executeSubmission(Long submissionId) {
-
-        try {
-            submissionService.markAsRunning(submissionId);
-        } catch (IllegalArgumentException exception) {
-            throw new SubmissionClaimException(
-                    "Submission could not be claimed for execution",
-                    exception
-            );
-        }
+   public ExecutionResult executeSubmission(
+        Long submissionId,
+        Integer expectedRetryCount
+) {
+    try {
+        submissionService.markAsRunning(
+            submissionId,
+            expectedRetryCount
+        );
+    } catch (IllegalArgumentException exception) {
+        throw new SubmissionClaimException(
+            "Submission could not be claimed for execution",
+            exception
+        );
+    }
 
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() ->

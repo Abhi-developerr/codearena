@@ -376,35 +376,27 @@ public void updateExecutionResult(
 }
 
 @Transactional
-public void markAsRunning(Long submissionId) {
-
-    Submission submission =
-            submissionRepository.findById(submissionId)
-                    .orElseThrow(() ->
-                            new SubmissionNotFoundException(
-                                    "Submission not found"
-                            )
-                    );
-
-    if (submission.getStatus()
-            != SubmissionStatus.QUEUED) {
-
+public void markAsRunning(
+        Long submissionId,
+        Integer expectedRetryCount
+) {
+    if (expectedRetryCount == null || expectedRetryCount < 0) {
         throw new IllegalArgumentException(
-                "Only queued submissions can be marked as running"
+            "Expected retry count must be non-negative"
         );
     }
 
-    int claimedSubmissionCount =
-            submissionRepository.claimQueuedSubmission(
-                    submissionId,
-                    SubmissionStatus.QUEUED,
-                    SubmissionStatus.RUNNING,
-                    Instant.now()
-            );
+    int claimed = submissionRepository.claimQueuedSubmission(
+        submissionId,
+        SubmissionStatus.QUEUED,
+        SubmissionStatus.RUNNING,
+        expectedRetryCount,
+        Instant.now()
+    );
 
-    if (claimedSubmissionCount != 1) {
+    if (claimed != 1) {
         throw new IllegalArgumentException(
-                "Only queued submissions can be marked as running"
+            "Submission could not be claimed for this attempt"
         );
     }
 }
