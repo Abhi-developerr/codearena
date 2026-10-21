@@ -31,6 +31,10 @@ export default function CodeWorkspace() {
   const [customInput, setCustomInput] = useState(sampleInput);
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("idle");
+  const [submissionId, setSubmissionId] = useState(null);
+
+  useSubmissionPolling(submissionId);
+
 
   function handleReset() {
     setCode(starterCode);
@@ -47,13 +51,38 @@ export default function CodeWorkspace() {
     setBottomTab("output");
   }
 
-  function handleSubmit() {
-    setStatus("demo");
-    setOutput(
-      "Demo mode: connect the submission API to submit your solution."
-    );
-    setBottomTab("output");
+  async function handleSubmit() {
+  if (!problemId) {
+    setSubmitError("Pehle ek problem select karo.");
+    return;
   }
+
+  if (!code.trim()) {
+    setSubmitError("Source code empty nahi ho sakta.");
+    return;
+  }
+
+  setSubmitting(true);
+  setSubmitError("");
+  setSubmissionId(null);
+
+  try {
+    const result = await submissionService.submit({
+      problemId,
+      language: "JAVA",
+      sourceCode: code,
+    });
+
+    setSubmissionId(result.id);
+  } catch (err) {
+    setSubmitError(
+      err.response?.data?.message ||
+        "Submission create nahi ho saka."
+    );
+  } finally {
+    setSubmitting(false);
+  }
+}
 
   return (
     <div className="flex h-[calc(100vh-65px)] min-h-[600px] flex-col bg-arena-bg">

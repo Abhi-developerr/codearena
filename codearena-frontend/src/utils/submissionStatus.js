@@ -1,66 +1,44 @@
 
-const STATUS_CONFIG = {
-  QUEUED: {
-    label: "Queued",
-    color: "text-yellow-400",
-  },
-  PENDING: {
-    label: "Pending",
-    color: "text-yellow-400",
-  },
-  RUNNING: {
-    label: "Running",
-    color: "text-blue-400",
-  },
-  ACCEPTED: {
-    label: "Accepted",
-    color: "text-green-400",
-  },
-  WRONG_ANSWER: {
-    label: "Wrong Answer",
-    color: "text-red-400",
-  },
-  COMPILATION_ERROR: {
-    label: "Compilation Error",
-    color: "text-red-400",
-  },
-  RUNTIME_ERROR: {
-    label: "Runtime Error",
-    color: "text-red-400",
-  },
-  TIME_LIMIT_EXCEEDED: {
-    label: "Time Limit Exceeded",
-    color: "text-orange-400",
-  },
-  MEMORY_LIMIT_EXCEEDED: {
-    label: "Memory Limit Exceeded",
-    color: "text-orange-400",
-  },
-  FAILED: {
-    label: "Execution Failed",
-    color: "text-red-400",
-  },
-};
+const TERMINAL_STATUSES = new Set([
+  "ACCEPTED",
+  "REJECTED",
+  "COMPLETED",
+  "FINISHED",
+  "FAILED",
+  "ERROR",
+  "CANCELLED",
+]);
 
-export function getStatusConfig(status) {
-  const normalized = String(status ?? "").toUpperCase();
+const TERMINAL_VERDICTS = new Set([
+  "ACCEPTED",
+  "WRONG_ANSWER",
+  "COMPILATION_ERROR",
+  "RUNTIME_ERROR",
+  "TIME_LIMIT_EXCEEDED",
+  "MEMORY_LIMIT_EXCEEDED",
+  "FAILED",
+]);
+
+export function isSubmissionFinished(submission) {
+  if (!submission) return false;
+
+  const status = String(submission.status ?? "").toUpperCase();
+  const verdict = String(submission.verdict ?? "").toUpperCase();
 
   return (
-    STATUS_CONFIG[normalized] ?? {
-      label: normalized || "Unknown",
-      color: "text-gray-400",
-    }
+    TERMINAL_STATUSES.has(status) ||
+    TERMINAL_VERDICTS.has(verdict)
   );
 }
 
-export function isTerminalStatus(status) {
-  return [
-    "ACCEPTED",
-    "WRONG_ANSWER",
-    "COMPILATION_ERROR",
-    "RUNTIME_ERROR",
-    "TIME_LIMIT_EXCEEDED",
-    "MEMORY_LIMIT_EXCEEDED",
-    "FAILED",
-  ].includes(String(status ?? "").toUpperCase());
+export function getSubmissionLabel(submission) {
+  if (!submission) return "Waiting for submission...";
+
+  const verdict = submission.verdict;
+  if (verdict) {
+    return String(verdict).replaceAll("_", " ");
+  }
+
+  const status = submission.status ?? "UNKNOWN";
+  return String(status).replaceAll("_", " ");
 }

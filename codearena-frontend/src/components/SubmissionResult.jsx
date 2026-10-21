@@ -1,75 +1,103 @@
 
-import { CheckCircle2, CircleAlert, LoaderCircle } from "lucide-react";
-import { getStatusConfig } from "../utils/submissionStatus";
+import {
+  getSubmissionLabel,
+  isSubmissionFinished,
+} from "../utils/submissionStatus";
 
-export default function SubmissionResult({ submission, loading, error }) {
-  if (loading) {
+export default function SubmissionResult({
+  submission,
+  loading,
+  error,
+}) {
+  if (loading && !submission) {
     return (
-      <div className="flex items-center gap-2 p-4 text-sm text-blue-400">
-        <LoaderCircle className="animate-spin" size={18} />
-        Loading submission result...
+      <div className="rounded-lg border border-slate-700 bg-slate-900 p-4 text-slate-300">
+        Submission result load ho raha hai...
       </div>
     );
   }
 
-  if (error) {
+  if (error && !submission) {
     return (
-      <div className="flex items-start gap-2 p-4 text-sm text-red-400">
-        <CircleAlert size={18} />
-        <p>{error}</p>
+      <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-300">
+        {error}
       </div>
     );
   }
 
-  if (!submission) {
-    return (
-      <p className="p-4 text-sm text-gray-500">
-        Submit your solution to see the result.
-      </p>
-    );
-  }
+  if (!submission) return null;
 
-  const config = getStatusConfig(submission.status);
+  const finished = isSubmissionFinished(submission);
+  const label = getSubmissionLabel(submission);
+  const accepted = submission.verdict === "ACCEPTED";
 
   return (
-    <section className="space-y-4 p-4">
-      <div className="flex items-center gap-2">
-        {submission.status === "ACCEPTED" ? (
-          <CheckCircle2 size={22} className="text-green-400" />
-        ) : (
-          <CircleAlert size={22} className={config.color} />
-        )}
+    <section className="space-y-4 rounded-lg border border-slate-700 bg-slate-900 p-5 text-slate-100">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold">Submission Result</h2>
 
-        <h3 className={`text-lg font-semibold ${config.color}`}>
-          {config.label}
-        </h3>
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-medium ${
+            accepted
+              ? "bg-green-500/15 text-green-400"
+              : finished
+                ? "bg-red-500/15 text-red-400"
+                : "bg-yellow-500/15 text-yellow-300"
+          }`}
+        >
+          {label}
+        </span>
       </div>
 
-      {submission.id != null && (
-        <p className="text-xs text-gray-500">
-          Submission ID: {submission.id}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Metric label="Submission ID" value={submission.id} />
+        <Metric label="Problem ID" value={submission.problemId} />
+        <Metric
+          label="Execution Time"
+          value={
+            submission.executionTime == null
+              ? "—"
+              : `${submission.executionTime} ms`
+          }
+        />
+        <Metric
+          label="Memory Used"
+          value={
+            submission.memoryUsed == null
+              ? "—"
+              : `${submission.memoryUsed} KB`
+          }
+        />
+      </div>
+
+      {!finished && (
+        <p className="text-sm text-slate-400">
+          Judge tumhara code process kar raha hai. Result automatically
+          refresh hoga.
         </p>
       )}
 
-      {submission.passedTestCases != null &&
-        submission.totalTestCases != null && (
-          <p className="text-sm text-gray-300">
-            Test cases passed: {submission.passedTestCases}/
-            {submission.totalTestCases}
-          </p>
-        )}
-
-      {submission.executionTimeMs != null && (
-        <p className="text-sm text-gray-400">
-          Execution time: {submission.executionTimeMs} ms
-        </p>
+      {error && (
+        <p className="text-sm text-amber-300">{error}</p>
       )}
 
-      {submission.memoryUsedMb != null && (
-        <p className="text-sm text-gray-400">
-          Memory used: {submission.memoryUsedMb} MB
-        </p>
-      )}
+      <p className="text-xs text-slate-500">
+        Updated:{" "}
+        {submission.updatedAt
+          ? new Date(submission.updatedAt).toLocaleString()
+          : "Not available"}
+      </p>
     </section>
+  );
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="rounded-md border border-slate-800 bg-slate-950 p-3">
+      <p className="text-sm text-slate-400">{label}</p>
+      <p className="mt-1 break-words font-medium">
+        {value ?? "—"}
+      </p>
+    </div>
   );
 }
