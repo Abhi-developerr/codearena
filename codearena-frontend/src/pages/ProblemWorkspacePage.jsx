@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, LoaderCircle, RefreshCw } from "lucide-react";
@@ -12,27 +11,40 @@ export default function ProblemWorkspacePage() {
   const [problem, setProblem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
-  async function fetchProblem() {
-    try {
-      setLoading(true);
-      setError("");
-
-      const data = await problemService.getProblemById(problemId);
-      setProblem(data);
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "Problem load nahi hui. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
-    fetchProblem();
-  }, [problemId]);
+    let cancelled = false;
+
+    async function loadProblem() {
+      try {
+        setLoading(true);
+        setError("");
+
+        const data = await problemService.getProblemById(problemId);
+        if (!cancelled) {
+          setProblem(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err.response?.data?.message ||
+              "Problem load nahi hui. Please try again."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadProblem();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [problemId, retryCount]);
 
   if (loading) {
     return (
@@ -62,7 +74,7 @@ export default function ProblemWorkspacePage() {
           </p>
 
           <button
-            onClick={fetchProblem}
+            onClick={() => setRetryCount((count) => count + 1)}
             className="mt-5 flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 font-medium text-black hover:bg-green-400"
           >
             <RefreshCw size={16} />
@@ -93,7 +105,10 @@ export default function ProblemWorkspacePage() {
         </span>
       </header>
 
-      <CodeWorkspace problemId={problem.id} />
+    <CodeWorkspace
+  problemId={problem.id}
+  problem={problem}
+/>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { submissionService } from "../services/submissionService";
+import { LANGUAGES, getLanguageConfig } from "../constants/languages";
 import { useSubmissionPolling } from "../hooks/useSubmissionPolling";
 import SubmissionResult from "./SubmissionResult";
 
@@ -21,15 +22,97 @@ const starterCode = `class Solution {
 
         return new int[]{};
     }
-}`;
+};`;
 
 const sampleInput = `4
 2 7 11 15
 9`;
+const [language, setLanguage] = useState("JAVA");
 
-export default function CodeWorkspace({ problemId }) {
+const [code, setCode] = useState(
+  getLanguageConfig("JAVA").defaultCode
+);
+
+const selectedLanguage = getLanguageConfig(language);
+
+function ProblemDescription({ problem }) {
+  if (!problem) {
+    return (
+      <div className="p-6 text-sm text-arena-muted">
+        Problem details are unavailable.
+      </div>
+    );
+  }
+
+  const difficultyStyles = {
+    EASY: "bg-green-500/10 text-green-400",
+    MEDIUM: "bg-yellow-500/10 text-yellow-400",
+    HARD: "bg-red-500/10 text-red-400",
+  };
+
+  return (
+    <div className="space-y-6 overflow-y-auto p-6">
+      <div>
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <span className="text-sm text-arena-muted">
+            Problem #{problem.id}
+          </span>
+
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              difficultyStyles[problem.difficulty] ||
+              "bg-slate-500/10 text-slate-400"
+            }`}
+          >
+            {problem.difficulty || "UNKNOWN"}
+          </span>
+        </div>
+
+        <h1 className="text-2xl font-bold text-white">
+          {problem.title}
+        </h1>
+      </div>
+
+      <section>
+        <h2 className="mb-3 text-lg font-semibold">Description</h2>
+        <p className="whitespace-pre-wrap leading-7 text-slate-300">
+          {problem.description || "No description available."}
+        </p>
+      </section>
+
+      {problem.inputFormat && (
+        <section>
+          <h2 className="mb-2 text-lg font-semibold">Input Format</h2>
+          <pre className="whitespace-pre-wrap rounded-lg border border-arena-border bg-arena-panel p-4 text-sm text-slate-300">
+            {problem.inputFormat}
+          </pre>
+        </section>
+      )}
+
+      {problem.outputFormat && (
+        <section>
+          <h2 className="mb-2 text-lg font-semibold">Output Format</h2>
+          <pre className="whitespace-pre-wrap rounded-lg border border-arena-border bg-arena-panel p-4 text-sm text-slate-300">
+            {problem.outputFormat}
+          </pre>
+        </section>
+      )}
+
+      {problem.constraints && (
+        <section>
+          <h2 className="mb-2 text-lg font-semibold">Constraints</h2>
+          <pre className="whitespace-pre-wrap rounded-lg border border-arena-border bg-arena-panel p-4 text-sm text-slate-300">
+            {problem.constraints}
+          </pre>
+        </section>
+      )}
+    </div>
+  );
+}
+
+export default function CodeWorkspace({ problemId, problem }) {
   const [code, setCode] = useState(starterCode);
-  const [language, setLanguage] = useState("java");
+  const [language, setLanguage] = useState("JAVA");
   const [activeTab, setActiveTab] = useState("description");
   const [bottomTab, setBottomTab] = useState("testcases");
   const [customInput, setCustomInput] = useState(sampleInput);
@@ -63,7 +146,6 @@ export default function CodeWorkspace({ problemId }) {
     );
     setBottomTab("output");
   }
-
   async function handleSubmit() {
     if (submitting) return;
 
@@ -88,11 +170,11 @@ export default function CodeWorkspace({ problemId }) {
     setBottomTab("output");
 
     try {
-      const result = await submissionService.submit({
-        problemId,
-        language: language.toUpperCase(),
-        sourceCode: code,
-      });
+     const result = await submissionService.submit({
+  problemId: Number(problemId),
+  language,
+  sourceCode: code,
+});
 
       if (result?.id == null) {
         throw new Error(
@@ -173,33 +255,7 @@ export default function CodeWorkspace({ problemId }) {
 
           <div className="flex-1 overflow-y-auto p-5">
             {activeTab === "description" ? (
-              <>
-                <h1 className="mb-4 text-2xl font-bold text-white">
-                  Two Sum
-                </h1>
-
-                <p className="mb-5 text-sm leading-7 text-gray-300">
-                  Given an array of integers nums and an integer
-                  target, return the indices of the two numbers
-                  such that they add up to target.
-                </p>
-
-                <p className="mb-5 text-sm leading-7 text-gray-300">
-                  You may assume that each input has exactly one
-                  solution, and you may not use the same element
-                  twice.
-                </p>
-
-                <h2 className="mb-3 font-semibold text-white">
-                  Constraints
-                </h2>
-
-                <ul className="list-inside list-disc space-y-2 text-sm text-gray-400">
-                  <li>2 ≤ nums.length ≤ 10⁴</li>
-                  <li>-10⁹ ≤ nums[i] ≤ 10⁹</li>
-                  <li>Exactly one valid answer exists.</li>
-                </ul>
-              </>
+              <ProblemDescription problem={problem} />
             ) : (
               <div className="space-y-5 text-sm">
                 <div>
@@ -235,17 +291,23 @@ Output: [1,2]`}
               <FileCode2 size={16} className="text-blue-400" />
               <span>Solution</span>
             </div>
-
             <label className="flex items-center gap-2 rounded-md border border-arena-border px-2 py-1.5">
               <select
-                value={language}
-                onChange={(event) => setLanguage(event.target.value)}
-                className="bg-transparent text-xs text-gray-200 outline-none"
-              >
-                <option value="java" className="bg-gray-900">
-                  Java
-                </option>
-              </select>
+  value={language}
+  onChange={(event) => {
+    const nextLanguage = event.target.value;
+
+    setLanguage(nextLanguage);
+    setCode(getLanguageConfig(nextLanguage).defaultCode);
+  }}
+  className="rounded-lg border border-arena-border bg-arena-panel px-3 py-2 text-sm text-white outline-none"
+>
+  {LANGUAGES.map((item) => (
+    <option key={item.value} value={item.value}>
+      {item.label}
+    </option>
+  ))}
+</select>
 
               <ChevronDown size={13} className="text-gray-400" />
             </label>
@@ -253,23 +315,19 @@ Output: [1,2]`}
 
           <div className="min-h-[250px] flex-1">
             <Editor
-              height="100%"
-              language={language}
-              theme="vs-dark"
-              value={code}
-              onChange={(value) => setCode(value ?? "")}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                fontFamily: "JetBrains Mono, monospace",
-                lineNumbers: "on",
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-                tabSize: 4,
-                padding: { top: 16 },
-                wordWrap: "on",
-              }}
-            />
+  height="100%"
+  language={selectedLanguage.editorLanguage}
+  theme="vs-dark"
+  value={code}
+  onChange={(value) => setCode(value ?? "")}
+  options={{
+    minimap: { enabled: false },
+    fontSize: 14,
+    automaticLayout: true,
+    scrollBeyondLastLine: false,
+    padding: { top: 16 },
+  }}
+/>
           </div>
 
           {/* Bottom tabs */}
