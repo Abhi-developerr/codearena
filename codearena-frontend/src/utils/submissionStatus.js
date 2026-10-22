@@ -1,44 +1,45 @@
 
-const TERMINAL_STATUSES = new Set([
-  "ACCEPTED",
-  "REJECTED",
-  "COMPLETED",
-  "FINISHED",
-  "FAILED",
-  "ERROR",
-  "CANCELLED",
-]);
-
-const TERMINAL_VERDICTS = new Set([
-  "ACCEPTED",
-  "WRONG_ANSWER",
-  "COMPILATION_ERROR",
-  "RUNTIME_ERROR",
-  "TIME_LIMIT_EXCEEDED",
-  "MEMORY_LIMIT_EXCEEDED",
-  "FAILED",
-]);
-
 export function isSubmissionFinished(submission) {
-  if (!submission) return false;
-
-  const status = String(submission.status ?? "").toUpperCase();
-  const verdict = String(submission.verdict ?? "").toUpperCase();
-
-  return (
-    TERMINAL_STATUSES.has(status) ||
-    TERMINAL_VERDICTS.has(verdict)
-  );
+  return submission?.status === "COMPLETED";
 }
 
 export function getSubmissionLabel(submission) {
-  if (!submission) return "Waiting for submission...";
-
-  const verdict = submission.verdict;
-  if (verdict) {
-    return String(verdict).replaceAll("_", " ");
+  if (!submission) {
+    return "Waiting for submission...";
   }
 
-  const status = submission.status ?? "UNKNOWN";
-  return String(status).replaceAll("_", " ");
+  if (submission.status === "QUEUED") {
+    return "Queued";
+  }
+
+  if (submission.status === "RUNNING") {
+    return "Running";
+  }
+
+  if (submission.status !== "COMPLETED") {
+    return submission.status || "Unknown status";
+  }
+
+  const labels = {
+    ACCEPTED: "Accepted",
+    WRONG_ANSWER: "Wrong Answer",
+    TIME_LIMIT_EXCEEDED: "Time Limit Exceeded",
+    MEMORY_LIMIT_EXCEEDED: "Memory Limit Exceeded",
+    RUNTIME_ERROR: "Runtime Error",
+    COMPILATION_ERROR: "Compilation Error",
+  };
+
+  return labels[submission.verdict] || "Unknown Verdict";
+}
+
+export function getSubmissionColor(submission) {
+  if (submission?.status !== "COMPLETED") {
+    return "text-yellow-400";
+  }
+
+  if (submission.verdict === "ACCEPTED") {
+    return "text-green-400";
+  }
+
+  return "text-red-400";
 }

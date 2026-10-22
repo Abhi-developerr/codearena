@@ -3,75 +3,75 @@ import { useEffect, useState } from "react";
 import { submissionService } from "../services/submissionService";
 import { isSubmissionFinished } from "../utils/submissionStatus";
 
-export function useSubmissionPolling(submissionId, enabled = true) {
+const POLLING_INTERVAL = 2000;
+const MAX_ATTEMPTS = 60;
+
+export default function useSubmissionPolling(submissionId) {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!submissionId || !enabled) return;
-
     let cancelled = false;
-    let timerId;
+    let timer;
     let attempts = 0;
 
-    const maxAttempts = 60;
-    const intervalMs = 2000;
-
-    async function poll(isInitialPoll = false) {
+    async function pollSubmission() {
       if (cancelled) return;
 
-      if (isInitialPoll) {
-        setSubmission(null);
-        setError("");
-      }
-
-      setLoading(true);
-
       try {
-        const data = await submissionService.getSubmission(
-          submissionId
-        );
+        attempts += 1;
+
+        const data = await submissionService.getSubmission(submissionId);
 
         if (cancelled) return;
 
         setSubmission(data);
-        setError("");
 
         if (isSubmissionFinished(data)) {
           setLoading(false);
           return;
         }
 
-        attempts += 1;
-
-        if (attempts >= maxAttempts) {
-          setError(
-            "Result abhi pending hai. Refresh karke dobara check karo."
-          );
+        if (attempts >= MAX_ATTEMPTS) {
           setLoading(false);
+          setError(
+            "Result abhi pending hai. Please refresh or check your submissions."
+          );
           return;
         }
 
-        timerId = setTimeout(poll, intervalMs);
+        timer = setTimeout(pollSubmission, POLLING_INTERVAL);
       } catch (err) {
         if (cancelled) return;
 
+        setLoading(false);
         setError(
           err.response?.data?.message ||
             "Submission status fetch nahi ho saka."
         );
-        setLoading(false);
       }
     }
 
-    timerId = setTimeout(() => poll(true), 0);
+    timer = setTimeout(() => {
+      if (!submissionId) {
+        setSubmission(null);
+        setLoading(false);
+        setError("");
+        return;
+      }
+
+      setSubmission(null);
+      setLoading(true);
+      setError("");
+      pollSubmission();
+    }, 0);
 
     return () => {
       cancelled = true;
-      clearTimeout(timerId);
+      clearTimeout(timer);
     };
-  }, [submissionId, enabled]);
+  }, [submissionId]);
 
   return { submission, loading, error };
 }

@@ -12,8 +12,7 @@ import {
 } from "lucide-react";
 
 import { submissionService } from "../services/submissionService";
-import { LANGUAGES, getLanguageConfig } from "../constants/languages";
-import { useSubmissionPolling } from "../hooks/useSubmissionPolling";
+import useSubmissionPolling from "../hooks/useSubmissionPolling";
 import SubmissionResult from "./SubmissionResult";
 
 const starterCode = `class Solution {
@@ -22,18 +21,11 @@ const starterCode = `class Solution {
 
         return new int[]{};
     }
-};`;
+}`;
 
 const sampleInput = `4
 2 7 11 15
 9`;
-const [language, setLanguage] = useState("JAVA");
-
-const [code, setCode] = useState(
-  getLanguageConfig("JAVA").defaultCode
-);
-
-const selectedLanguage = getLanguageConfig(language);
 
 function ProblemDescription({ problem }) {
   if (!problem) {
@@ -112,7 +104,7 @@ function ProblemDescription({ problem }) {
 
 export default function CodeWorkspace({ problemId, problem }) {
   const [code, setCode] = useState(starterCode);
-  const [language, setLanguage] = useState("JAVA");
+  const [language, setLanguage] = useState("java");
   const [activeTab, setActiveTab] = useState("description");
   const [bottomTab, setBottomTab] = useState("testcases");
   const [customInput, setCustomInput] = useState(sampleInput);
@@ -146,6 +138,7 @@ export default function CodeWorkspace({ problemId, problem }) {
     );
     setBottomTab("output");
   }
+
   async function handleSubmit() {
     if (submitting) return;
 
@@ -170,11 +163,11 @@ export default function CodeWorkspace({ problemId, problem }) {
     setBottomTab("output");
 
     try {
-     const result = await submissionService.submit({
-  problemId: Number(problemId),
-  language,
-  sourceCode: code,
-});
+      const result = await submissionService.submit({
+        problemId,
+        language: language.toUpperCase(),
+        sourceCode: code,
+      });
 
       if (result?.id == null) {
         throw new Error(
@@ -291,23 +284,17 @@ Output: [1,2]`}
               <FileCode2 size={16} className="text-blue-400" />
               <span>Solution</span>
             </div>
+
             <label className="flex items-center gap-2 rounded-md border border-arena-border px-2 py-1.5">
               <select
-  value={language}
-  onChange={(event) => {
-    const nextLanguage = event.target.value;
-
-    setLanguage(nextLanguage);
-    setCode(getLanguageConfig(nextLanguage).defaultCode);
-  }}
-  className="rounded-lg border border-arena-border bg-arena-panel px-3 py-2 text-sm text-white outline-none"
->
-  {LANGUAGES.map((item) => (
-    <option key={item.value} value={item.value}>
-      {item.label}
-    </option>
-  ))}
-</select>
+                value={language}
+                onChange={(event) => setLanguage(event.target.value)}
+                className="bg-transparent text-xs text-gray-200 outline-none"
+              >
+                <option value="java" className="bg-gray-900">
+                  Java
+                </option>
+              </select>
 
               <ChevronDown size={13} className="text-gray-400" />
             </label>
@@ -315,19 +302,23 @@ Output: [1,2]`}
 
           <div className="min-h-[250px] flex-1">
             <Editor
-  height="100%"
-  language={selectedLanguage.editorLanguage}
-  theme="vs-dark"
-  value={code}
-  onChange={(value) => setCode(value ?? "")}
-  options={{
-    minimap: { enabled: false },
-    fontSize: 14,
-    automaticLayout: true,
-    scrollBeyondLastLine: false,
-    padding: { top: 16 },
-  }}
-/>
+              height="100%"
+              language={language}
+              theme="vs-dark"
+              value={code}
+              onChange={(value) => setCode(value ?? "")}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                fontFamily: "JetBrains Mono, monospace",
+                lineNumbers: "on",
+                scrollBeyondLastLine: false,
+                automaticLayout: true,
+                tabSize: 4,
+                padding: { top: 16 },
+                wordWrap: "on",
+              }}
+            />
           </div>
 
           {/* Bottom tabs */}

@@ -1,7 +1,15 @@
 
 import {
+  CheckCircle2,
+  XCircle,
+  Clock3,
+  HardDrive,
+  LoaderCircle,
+} from "lucide-react";
+
+import {
   getSubmissionLabel,
-  isSubmissionFinished,
+  getSubmissionColor,
 } from "../utils/submissionStatus";
 
 export default function SubmissionResult({
@@ -11,93 +19,105 @@ export default function SubmissionResult({
 }) {
   if (loading && !submission) {
     return (
-      <div className="rounded-lg border border-slate-700 bg-slate-900 p-4 text-slate-300">
-        Submission result load ho raha hai...
+      <div className="flex items-center gap-3 p-5 text-slate-300">
+        <LoaderCircle className="animate-spin" size={20} />
+        Judging your submission...
       </div>
     );
   }
 
   if (error && !submission) {
     return (
-      <div className="rounded-lg border border-red-800 bg-red-950/40 p-4 text-red-300">
-        {error}
+      <div className="m-4 rounded-lg border border-red-500/30 bg-red-500/10 p-4">
+        <p className="font-medium text-red-400">
+          {error}
+        </p>
       </div>
     );
   }
 
-  if (!submission) return null;
+  if (!submission) {
+    return (
+      <div className="p-5 text-sm text-arena-muted">
+        Submit your code to see the result here.
+      </div>
+    );
+  }
 
-  const finished = isSubmissionFinished(submission);
-  const label = getSubmissionLabel(submission);
-  const accepted = submission.verdict === "ACCEPTED";
+  const completed = submission.status === "COMPLETED";
+  const accepted =
+    completed && submission.verdict === "ACCEPTED";
+
+  const Icon = !completed
+    ? LoaderCircle
+    : accepted
+      ? CheckCircle2
+      : XCircle;
 
   return (
-    <section className="space-y-4 rounded-lg border border-slate-700 bg-slate-900 p-5 text-slate-100">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold">Submission Result</h2>
-
-        <span
-          className={`rounded-full px-3 py-1 text-sm font-medium ${
-            accepted
-              ? "bg-green-500/15 text-green-400"
-              : finished
-                ? "bg-red-500/15 text-red-400"
-                : "bg-yellow-500/15 text-yellow-300"
+    <div className="space-y-4 p-5">
+      <div className="flex items-start gap-3">
+        <Icon
+          size={24}
+          className={`${getSubmissionColor(submission)} ${
+            !completed ? "animate-spin" : ""
           }`}
-        >
-          {label}
-        </span>
+        />
+
+        <div>
+          <h3
+            className={`text-lg font-semibold ${getSubmissionColor(
+              submission
+            )}`}
+          >
+            {getSubmissionLabel(submission)}
+          </h3>
+
+          <p className="mt-1 text-sm text-arena-muted">
+            Submission ID: {submission.id}
+          </p>
+
+          {!completed && (
+            <p className="mt-1 text-sm text-arena-muted">
+              Your code is being judged. Please wait...
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Metric label="Submission ID" value={submission.id} />
-        <Metric label="Problem ID" value={submission.problemId} />
-        <Metric
-          label="Execution Time"
-          value={
-            submission.executionTime == null
-              ? "—"
-              : `${submission.executionTime} ms`
-          }
-        />
-        <Metric
-          label="Memory Used"
-          value={
-            submission.memoryUsed == null
-              ? "—"
-              : `${submission.memoryUsed} KB`
-          }
-        />
-      </div>
+      {completed && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-arena-border bg-arena-panel p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm text-arena-muted">
+              <Clock3 size={16} />
+              Execution Time
+            </div>
 
-      {!finished && (
-        <p className="text-sm text-slate-400">
-          Judge tumhara code process kar raha hai. Result automatically
-          refresh hoga.
-        </p>
+            <p className="font-semibold text-white">
+              {submission.executionTime ?? "—"}
+              {submission.executionTime != null ? " ms" : ""}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-arena-border bg-arena-panel p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm text-arena-muted">
+              <HardDrive size={16} />
+              Memory Used
+            </div>
+
+            <p className="font-semibold text-white">
+              {submission.memoryUsed ?? "—"}
+              {submission.memoryUsed != null ? " KB" : ""}
+            </p>
+          </div>
+        </div>
       )}
 
       {error && (
-        <p className="text-sm text-amber-300">{error}</p>
+        <p className="text-sm text-yellow-400">
+          {error}
+        </p>
       )}
-
-      <p className="text-xs text-slate-500">
-        Updated:{" "}
-        {submission.updatedAt
-          ? new Date(submission.updatedAt).toLocaleString()
-          : "Not available"}
-      </p>
-    </section>
-  );
-}
-
-function Metric({ label, value }) {
-  return (
-    <div className="rounded-md border border-slate-800 bg-slate-950 p-3">
-      <p className="text-sm text-slate-400">{label}</p>
-      <p className="mt-1 break-words font-medium">
-        {value ?? "—"}
-      </p>
     </div>
   );
 }
