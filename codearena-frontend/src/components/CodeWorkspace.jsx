@@ -11,6 +11,10 @@ import {
   CheckCircle2,
 } from "lucide-react";
 
+import { submissionService } from "../services/submissionService";
+import { useSubmissionPolling } from "../hooks/useSubmissionPolling";
+import SubmissionResult from "./SubmissionResult";
+
 const starterCode = `class Solution {
     public int[] twoSum(int[] nums, int target) {
         // Write your solution here
@@ -23,7 +27,7 @@ const sampleInput = `4
 2 7 11 15
 9`;
 
-export default function CodeWorkspace() {
+export default function CodeWorkspace({ problemId }) {
   const [code, setCode] = useState(starterCode);
   const [language, setLanguage] = useState("java");
   const [activeTab, setActiveTab] = useState("description");
@@ -31,73 +35,105 @@ export default function CodeWorkspace() {
   const [customInput, setCustomInput] = useState(sampleInput);
   const [output, setOutput] = useState("");
   const [status, setStatus] = useState("idle");
+
   const [submissionId, setSubmissionId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
-  useSubmissionPolling(submissionId);
-
+  const {
+    submission,
+    loading: polling,
+    error: pollingError,
+  } = useSubmissionPolling(submissionId);
 
   function handleReset() {
     setCode(starterCode);
     setOutput("");
     setStatus("idle");
+    setSubmitError("");
+    setSubmissionId(null);
+    setBottomTab("testcases");
   }
 
-  // Backend integration will be added in a later step.
+  // Run API abhi backend mein available nahi hai.
   function handleRun() {
     setStatus("demo");
     setOutput(
-      "Demo mode: connect the Spring Boot execution API to run code."
+      "Demo mode: code execute karne ke liye backend Run API connect karni hogi."
     );
     setBottomTab("output");
   }
 
   async function handleSubmit() {
-  if (!problemId) {
-    setSubmitError("Pehle ek problem select karo.");
-    return;
+    if (submitting) return;
+
+    if (!problemId) {
+      setSubmitError(
+        "Problem ID missing hai. App.jsx se actual problemId pass karo."
+      );
+      setBottomTab("output");
+      return;
+    }
+
+    if (!code.trim()) {
+      setSubmitError("Source code empty nahi ho sakta.");
+      setBottomTab("output");
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitError("");
+    setSubmissionId(null);
+    setStatus("submitting");
+    setBottomTab("output");
+
+    try {
+      const result = await submissionService.submit({
+        problemId,
+        language: language.toUpperCase(),
+        sourceCode: code,
+      });
+
+      if (result?.id == null) {
+        throw new Error(
+          "Submission create hui, lekin response mein submission ID nahi mili."
+        );
+      }
+
+      setSubmissionId(result.id);
+      setStatus("submitted");
+    } catch (error) {
+      setSubmitError(
+        error.response?.data?.message ||
+          error.message ||
+          "Submission create nahi ho saka."
+      );
+      setStatus("error");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  if (!code.trim()) {
-    setSubmitError("Source code empty nahi ho sakta.");
-    return;
-  }
-
-  setSubmitting(true);
-  setSubmitError("");
-  setSubmissionId(null);
-
-  try {
-    const result = await submissionService.submit({
-      problemId,
-      language: "JAVA",
-      sourceCode: code,
-    });
-
-    setSubmissionId(result.id);
-  } catch (err) {
-    setSubmitError(
-      err.response?.data?.message ||
-        "Submission create nahi ho saka."
-    );
-  } finally {
-    setSubmitting(false);
-  }
-}
+  const resultError = submitError || pollingError;
 
   return (
     <div className="flex h-[calc(100vh-65px)] min-h-[600px] flex-col bg-arena-bg">
+      {/* Header */}
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-arena-border px-4">
         <div className="flex items-center gap-3">
           <FileCode2 size={18} className="text-green-400" />
-          <span className="text-sm font-medium">
-            1. Two Sum
+
+          <span className="text-sm font-medium text-white">
+            Two Sum
           </span>
+
           <span className="rounded bg-green-500/10 px-2 py-1 text-xs text-green-400">
             Easy
           </span>
         </div>
 
         <button
+          type="button"
           onClick={handleReset}
           className="flex items-center gap-2 rounded-lg border border-arena-border px-3 py-2 text-xs text-gray-300 hover:bg-white/5"
         >
@@ -107,10 +143,11 @@ export default function CodeWorkspace() {
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2 p-2 lg:flex-row">
-        {/* Problem panel */}
+        {/* Problem description */}
         <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-arena-border bg-arena-panel lg:w-1/2">
           <div className="flex border-b border-arena-border">
             <button
+              type="button"
               onClick={() => setActiveTab("description")}
               className={`px-4 py-3 text-sm ${
                 activeTab === "description"
@@ -122,6 +159,7 @@ export default function CodeWorkspace() {
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("examples")}
               className={`px-4 py-3 text-sm ${
                 activeTab === "examples"
@@ -141,15 +179,15 @@ export default function CodeWorkspace() {
                 </h1>
 
                 <p className="mb-5 text-sm leading-7 text-gray-300">
-                  Given an array of integers nums and an
-                  integer target, return the indices of the
-                  two numbers such that they add up to target.
+                  Given an array of integers nums and an integer
+                  target, return the indices of the two numbers
+                  such that they add up to target.
                 </p>
 
                 <p className="mb-5 text-sm leading-7 text-gray-300">
-                  You may assume that each input has exactly
-                  one solution, and you may not use the same
-                  element twice.
+                  You may assume that each input has exactly one
+                  solution, and you may not use the same element
+                  twice.
                 </p>
 
                 <h2 className="mb-3 font-semibold text-white">
@@ -168,6 +206,7 @@ export default function CodeWorkspace() {
                   <h3 className="mb-2 font-semibold text-white">
                     Example 1
                   </h3>
+
                   <pre className="overflow-x-auto rounded-lg bg-arena-bg p-3 text-gray-300">
 {`Input: nums = [2,7,11,15], target = 9
 Output: [0,1]`}
@@ -178,6 +217,7 @@ Output: [0,1]`}
                   <h3 className="mb-2 font-semibold text-white">
                     Example 2
                   </h3>
+
                   <pre className="overflow-x-auto rounded-lg bg-arena-bg p-3 text-gray-300">
 {`Input: nums = [3,2,4], target = 6
 Output: [1,2]`}
@@ -191,7 +231,7 @@ Output: [1,2]`}
         {/* Editor and output */}
         <section className="flex min-h-[350px] flex-1 flex-col overflow-hidden rounded-xl border border-arena-border bg-arena-panel lg:w-1/2">
           <div className="flex h-12 shrink-0 items-center justify-between border-b border-arena-border px-4">
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-sm text-white">
               <FileCode2 size={16} className="text-blue-400" />
               <span>Solution</span>
             </div>
@@ -206,6 +246,7 @@ Output: [1,2]`}
                   Java
                 </option>
               </select>
+
               <ChevronDown size={13} className="text-gray-400" />
             </label>
           </div>
@@ -231,9 +272,12 @@ Output: [1,2]`}
             />
           </div>
 
+          {/* Bottom tabs */}
           <div className="flex h-12 shrink-0 items-center gap-2 border-y border-arena-border px-3">
             <Terminal size={16} className="text-gray-400" />
+
             <button
+              type="button"
               onClick={() => setBottomTab("testcases")}
               className={`px-2 py-3 text-xs ${
                 bottomTab === "testcases"
@@ -245,6 +289,7 @@ Output: [1,2]`}
             </button>
 
             <button
+              type="button"
               onClick={() => setBottomTab("output")}
               className={`px-2 py-3 text-xs ${
                 bottomTab === "output"
@@ -256,12 +301,14 @@ Output: [1,2]`}
             </button>
           </div>
 
+          {/* Bottom panel */}
           <div className="min-h-[130px] flex-1 overflow-y-auto p-4">
             {bottomTab === "testcases" ? (
               <div>
                 <label className="mb-2 block text-xs text-gray-400">
                   Custom input
                 </label>
+
                 <textarea
                   value={customInput}
                   onChange={(event) =>
@@ -272,14 +319,21 @@ Output: [1,2]`}
                 />
               </div>
             ) : (
-              <div className="text-sm">
-                {status === "idle" ? (
+              <div className="space-y-3 text-sm">
+                {submissionId || submitting || resultError ? (
+                  <SubmissionResult
+                    submission={submission}
+                    loading={submitting || polling}
+                    error={resultError}
+                  />
+                ) : status === "idle" ? (
                   <p className="text-gray-500">
-                    Run your code to see output here.
+                    Run or submit your code to see the result here.
                   </p>
                 ) : (
                   <div className="flex items-start gap-2 text-yellow-300">
                     <CheckCircle2 size={17} />
+
                     <pre className="whitespace-pre-wrap font-sans text-xs">
                       {output}
                     </pre>
@@ -289,26 +343,40 @@ Output: [1,2]`}
             )}
           </div>
 
+          {/* Actions */}
           <div className="flex shrink-0 items-center justify-between border-t border-arena-border p-3">
             <span className="text-xs text-gray-500">
-              {status === "idle" ? "Ready" : "Demo mode"}
+              {submitting
+                ? "Submitting..."
+                : polling
+                  ? "Judge processing..."
+                  : status === "error"
+                    ? "Submission failed"
+                    : status === "submitted"
+                      ? "Submission created"
+                      : status === "demo"
+                        ? "Demo mode"
+                        : "Ready"}
             </span>
 
             <div className="flex gap-2">
               <button
+                type="button"
                 onClick={handleRun}
-                className="flex items-center gap-2 rounded-lg border border-arena-border px-3 py-2 text-sm hover:bg-white/5"
+                className="flex items-center gap-2 rounded-lg border border-arena-border px-3 py-2 text-sm text-gray-200 hover:bg-white/5"
               >
                 <Play size={15} />
                 Run
               </button>
 
               <button
+                type="button"
                 onClick={handleSubmit}
-                className="flex items-center gap-2 rounded-lg bg-green-500 px-3 py-2 text-sm font-semibold text-gray-950 hover:bg-green-400"
+                disabled={submitting}
+                className="flex items-center gap-2 rounded-lg bg-green-500 px-3 py-2 text-sm font-semibold text-gray-950 hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Send size={15} />
-                Submit
+                {submitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </div>

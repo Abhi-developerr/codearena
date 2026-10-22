@@ -19,8 +19,7 @@ export default function App() {
           Coding workspace
         </span>
       </header>
-
-      <CodeWorkspace />
+      <CodeWorkspace problemId={YOUR_ACTUAL_TWO_SUM_ID} />
     </div>
   );
 }
