@@ -18,8 +18,13 @@ export function useSubmissionPolling(submissionId, enabled = true) {
     const maxAttempts = 60;
     const intervalMs = 2000;
 
-    async function poll() {
+    async function poll(isInitialPoll = false) {
       if (cancelled) return;
+
+      if (isInitialPoll) {
+        setSubmission(null);
+        setError("");
+      }
 
       setLoading(true);
 
@@ -60,9 +65,7 @@ export function useSubmissionPolling(submissionId, enabled = true) {
       }
     }
 
-    setSubmission(null);
-    setError("");
-    poll();
+    timerId = setTimeout(() => poll(true), 0);
 
     return () => {
       cancelled = true;
