@@ -232,7 +232,7 @@ private void updatePeakMemory(
     }
 }
 
-    private void ensureImageAvailable() {
+private void ensureImageAvailable() {
 
     String image = sandboxProperties.getDockerImage();
 
@@ -588,7 +588,5 @@ private com.github.dockerjava.api.async.ResultCallback.Adapter<
 
     return callback;
 }
-
-
 
 }
